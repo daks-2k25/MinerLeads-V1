@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(taskkill //PID 16504 //F)",
+      "Bash(node -e \"console.log\\(JSON.stringify\\(require\\('./package.json'\\).scripts, null, 2\\)\\)\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/saved-searches -H \"Content-Type: application/json\" -d '{\"nome\":\"Teste Frontend\",\"termoBusca\":\"pizzarias\",\"cidade\":\"Curitiba\",\"bairro\":\"Centro\",\"categoria\":\"alimentacao\"}')",
+      "Bash(curl -s http://localhost:3000/api/saved-searches)",
+      "Bash(curl -s -o /dev/null -w \"GET /api/leads -> HTTP:%{http_code}\\\\n\" http://localhost:3000/api/leads)"
+    ]
+  }
+}

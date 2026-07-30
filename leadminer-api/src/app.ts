@@ -16,3 +16,4 @@ app.use("/api/scraper", scraperRouter);
 app.use("/api/leads", leadsRouter);
 
 export default app;
+

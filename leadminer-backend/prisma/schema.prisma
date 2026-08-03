@@ -1,0 +1,141 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SearchStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum LogLevel {
+  info
+  warn
+  error
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  email     String   @unique
+  senhaHash String   @map("senha_hash")
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  savedSearches   SavedSearch[]
+  searchHistories SearchHistory[]
+  logs            Log[]
+
+  @@map("users")
+}
+
+model Lead {
+  id           Int      @id @default(autoincrement())
+  placeId      String   @unique @map("place_id")
+  nome         String?
+  telefone     String?
+  website      String?
+  endereco     String?
+  cidade       String
+  categoria    String
+  urlMaps      String   @map("url_maps")
+  rating       Float?
+  openingHours String?  @map("opening_hours")
+  ativo        Boolean  @default(true)
+  capturadoEm  DateTime @map("capturado_em")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  searchHistoryLeads SearchHistoryLead[]
+
+  @@index([cidade])
+  @@index([categoria])
+  @@index([ativo])
+  @@map("leads")
+}
+
+model SavedSearch {
+  id         Int      @id @default(autoincrement())
+  nome       String
+  termoBusca String   @map("termo_busca")
+  cidade     String?
+  bairro     String?
+  categoria  String?
+  userId     Int?     @map("user_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("saved_searches")
+}
+
+model SearchHistory {
+  id              Int          @id @default(autoincrement())
+  termoBusca      String       @map("termo_busca")
+  cidade          String?
+  bairro          String?
+  categoria       String?
+  quantidadeLeads Int          @map("quantidade_leads")
+  quantidadeNovos Int          @default(0) @map("quantidade_novos")
+  quantidadeCache Int          @default(0) @map("quantidade_cache")
+  status          SearchStatus @default(PENDING)
+  erroMensagem    String?      @map("erro_mensagem")
+  userId          Int?         @map("user_id")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  user               User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  searchHistoryLeads SearchHistoryLead[]
+  logs               Log[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("search_history")
+}
+
+model SearchHistoryLead {
+  searchHistoryId Int @map("search_history_id")
+  leadId          Int @map("lead_id")
+
+  searchHistory SearchHistory @relation(fields: [searchHistoryId], references: [id], onDelete: Cascade)
+  lead          Lead          @relation(fields: [leadId], references: [id], onDelete: Restrict)
+
+  @@id([searchHistoryId, leadId])
+  @@index([leadId])
+  @@map("search_history_leads")
+}
+
+model Log {
+  id        Int      @id @default(autoincrement())
+  nivel     LogLevel
+  origem    String
+  mensagem  String
+  contexto  Json?
+  buscaId   Int?     @map("busca_id")
+  userId    Int?     @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  searchHistory SearchHistory? @relation(fields: [buscaId], references: [id], onDelete: SetNull)
+  user          User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([buscaId])
+  @@index([createdAt])
+  @@index([userId])
+  @@map("logs")
+}

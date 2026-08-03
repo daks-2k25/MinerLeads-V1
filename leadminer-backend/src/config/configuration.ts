@@ -11,6 +11,7 @@ export interface AppConfig {
   };
   googlePlaces: {
     apiKey?: string;
+    creditLimit: number;
   };
 }
 
@@ -27,5 +28,6 @@ export default (): AppConfig => ({
   },
   googlePlaces: {
     apiKey: process.env.GOOGLE_PLACES_API_KEY,
+    creditLimit: parseInt(process.env.GOOGLE_API_CREDIT_LIMIT ?? '200', 10),
   },
 });

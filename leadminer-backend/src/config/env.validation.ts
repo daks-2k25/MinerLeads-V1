@@ -46,6 +46,11 @@ class EnvironmentVariables {
   @IsString()
   @IsOptional()
   GOOGLE_PLACES_API_KEY?: string;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  GOOGLE_API_CREDIT_LIMIT: number = 200;
 }
 
 export function validate(config: Record<string, unknown>) {

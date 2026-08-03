@@ -1,3 +1,5 @@
+import { ApiCreditDto } from './api-credit.dto';
+
 export class UltimaPesquisaDto {
   id: number;
   termoBusca: string;
@@ -20,6 +22,8 @@ export class DashboardMetricsDto {
   totalPesquisas: number;
   totalLeadsNovos: number;
   totalLeadsCache: number;
+  chamadasEvitadasCache: number;
   ultimasPesquisas: UltimaPesquisaDto[];
   categoriasMaisPesquisadas: CategoriaMaisPesquisadaDto[];
+  apiCredit: ApiCreditDto;
 }

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ApiCreditService } from './api-credit.service';
 import { DashboardMetricsDto } from './dto/dashboard-metrics.dto';
 
 const ULTIMAS_PESQUISAS_LIMIT = 10;
@@ -7,7 +8,10 @@ const CATEGORIAS_MAIS_PESQUISADAS_LIMIT = 10;
 
 @Injectable()
 export class DashboardService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly apiCreditService: ApiCreditService,
+  ) {}
 
   async getMetrics(): Promise<DashboardMetricsDto> {
     const [totalLeads, totalPesquisas, somaLeads, ultimasPesquisas, categoriasAgrupadas] =
@@ -41,16 +45,22 @@ export class DashboardService {
         }),
       ]);
 
+    const totalLeadsCache = somaLeads._sum.quantidadeCache ?? 0;
+
     return {
       totalLeads,
       totalPesquisas,
       totalLeadsNovos: somaLeads._sum.quantidadeNovos ?? 0,
-      totalLeadsCache: somaLeads._sum.quantidadeCache ?? 0,
+      totalLeadsCache,
+      // Cada lead recuperado do cache por placeId é uma chamada de Place
+      // Details que não precisou ser feita — mesma soma de quantidadeCache.
+      chamadasEvitadasCache: totalLeadsCache,
       ultimasPesquisas,
       categoriasMaisPesquisadas: categoriasAgrupadas.map((item) => ({
         categoria: item.categoria as string,
         totalPesquisas: item._count.categoria,
       })),
+      apiCredit: this.apiCreditService.getSnapshot(),
     };
   }
 }

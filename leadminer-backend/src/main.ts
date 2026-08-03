@@ -9,6 +9,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
+  app.enableShutdownHooks();
+
   app.setGlobalPrefix('api');
 
   // CORS_ORIGIN aceita uma lista separada por vírgulas — o Next.js em dev

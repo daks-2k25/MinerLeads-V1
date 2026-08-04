@@ -1,0 +1,842 @@
+[
+  {
+    "nome": "Dr. Edevar Daniel - CARDIOLOGISTA",
+    "telefone": "(41) 99193-1688",
+    "website": "plurivida.com.br",
+    "endereco": "PLURIVIDA - R. São Bento, 599 - Hauer, Curitiba - PR, 81610-140",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Dr.+Edevar+Daniel+-+CARDIOLOGISTA/data=!4m7!3m6!1s0x94dce4d3f6c315f1:0x160a6963e982e7bd!8m2!3d-25.477568!4d-49.248462!16s%2Fg%2F1ptysyhbp!19sChIJ8RXD9tPk3JQRveeC6WNpChY?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T16:59:21.652Z"
+  },
+  {
+    "nome": "Fabio Marchioro, Psicólogo",
+    "telefone": null,
+    "website": "doctoralia.com.br",
+    "endereco": "R. Padre Anchieta, 1150 - Mercês, Curitiba - PR, 80430-061",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Fabio+Marchioro,+Psic%C3%B3logo/data=!4m7!3m6!1s0x94dce3980a658d27:0x899224dfa4563409!8m2!3d-25.42942!4d-49.29094!16s%2Fg%2F11xh3d4p7w!19sChIJJ41lCpjj3JQRCTRWpN8kkok?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:10:51.241Z"
+  },
+  {
+    "nome": "Centro Médico Santa Casa de Curitiba",
+    "telefone": "(41) 3320-3500",
+    "website": "santacasacuritiba.com.br",
+    "endereco": "Tv. Frei Caneca, 101 - Centro, Curitiba - PR, 80010-090",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Centro+M%C3%A9dico+Santa+Casa+de+Curitiba/data=!4m7!3m6!1s0x94dce46e4bfa51f7:0xd0e2529d766ad9f5!8m2!3d-25.4372538!4d-49.2719144!16s%2Fg%2F11dybf0__3!19sChIJ91H6S27k3JQR9dlqdp1S4tA?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:10:52.492Z"
+  },
+  {
+    "nome": "Clínica Mavie",
+    "telefone": "(11) 96515-4935",
+    "website": "maviemeubrasil.com",
+    "endereco": "Av. Visc. de Guarapuava, 2764 - Sl 1908 - Centro, Curitiba - PR, 80010-100",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+Mavie/data=!4m7!3m6!1s0x94dce423c2bc0001:0x49ffce125c24072e!8m2!3d-25.4362188!4d-49.2685796!16s%2Fg%2F11f3q065vc!19sChIJAQC8wiPk3JQRLgckXBLO_0k?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:15.950Z"
+  },
+  {
+    "nome": "Coluna em Evidência - Clínica de Quiropraxia",
+    "telefone": "(41) 99142-8921",
+    "website": "colunaemevidencia.com.br",
+    "endereco": "MID WORK - Av. Visc. de Guarapuava, 2764 - Sl 1208 - Centro, Curitiba - PR, 80010-100",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Coluna+em+Evid%C3%AAncia+-+Cl%C3%ADnica+de+Quiropraxia/data=!4m7!3m6!1s0x951977ecdfcddf8b:0x1df2e5f93be15c03!8m2!3d-25.4362129!4d-49.2685341!16s%2Fg%2F11clvlb3rh!19sChIJi9_N3-x3GZURA1zhO_nl8h0?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:17.673Z"
+  },
+  {
+    "nome": "Clínica Odontológica MM",
+    "telefone": "(41) 3233-0614",
+    "website": "clinicamm.com.br",
+    "endereco": "Al. Dr. Muricy, 54 - Centro, Curitiba - PR, 80010-120",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+Odontol%C3%B3gica+MM/data=!4m7!3m6!1s0x94dce46ec23ff0ad:0x29d76105fdfd06f6!8m2!3d-25.4367018!4d-49.2700976!16s%2Fg%2F1tfp3l_h!19sChIJrfA_wm7k3JQR9gb9_QVh1yk?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:18.966Z"
+  },
+  {
+    "nome": "Dra. Louise Licastro - Clínica Luna Y Mello",
+    "telefone": "(41) 99776-6231",
+    "website": null,
+    "endereco": "Av. Visc. de Guarapuava, 2764 - sala 1311 - Centro, Curitiba - PR, 80010-100",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Dra.+Louise+Licastro+-+Cl%C3%ADnica+Luna+Y+Mello/data=!4m7!3m6!1s0x94dce506c6f32cc3:0xeec5ccb2cdfc9ae1!8m2!3d-25.4364496!4d-49.2685442!16s%2Fg%2F11mr2w5mn9!19sChIJwyzzxgbl3JQR4Zr8zbLMxe4?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:20.202Z"
+  },
+  {
+    "nome": "Clinifel Clínica Veterinária 24 horas",
+    "telefone": "(41) 3029-1044",
+    "website": "clinifel.com.br",
+    "endereco": "Av. Iguaçu, 608 - Rebouças, Curitiba - PR, 80230-020",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Clinifel+Cl%C3%ADnica+Veterin%C3%A1ria+24+horas/data=!4m7!3m6!1s0x94dce595b1a1b74b:0x3bfe684376c77313!8m2!3d-25.4413674!4d-49.2678907!16s%2Fg%2F11g0lb6lzq!19sChIJS7ehsZXl3JQRE3PHdkNo_js?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:22.752Z"
+  },
+  {
+    "nome": "AmorSaúde Curitiba Centro",
+    "telefone": "(41) 3165-2000",
+    "website": "amorsaude.com.br",
+    "endereco": "Rua 24 de Maio, 640 - Centro, Curitiba - PR, 80220-060",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/AmorSa%C3%BAde+Curitiba+Centro/data=!4m7!3m6!1s0x94dce5dbe56abdc5:0x1d442c03e255e4af!8m2!3d-25.4424547!4d-49.2719931!16s%2Fg%2F11t6yfxpfv!19sChIJxb1q5dvl3JQRr-RV4gMsRB0?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:27.157Z"
+  },
+  {
+    "nome": "Policlínica Central de Curitiba",
+    "telefone": "(41) 3246-4050",
+    "website": "policlinicacentralcuritiba.com.br",
+    "endereco": "R. Voluntários da Pátria, 233 - 5º andar - Centro, Curitiba - PR, 80020-000",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Policl%C3%ADnica+Central+de+Curitiba/data=!4m7!3m6!1s0x94dce584bcd4d86b:0x759921c12021da83!8m2!3d-25.433131!4d-49.2744995!16s%2Fg%2F11j1c0xvlv!19sChIJa9jUvITl3JQRg9ohIMEhmXU?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:11:00.598Z"
+  },
+  {
+    "nome": "Clinica Eye Vision Curitiba",
+    "telefone": "(41) 98775-8249",
+    "website": null,
+    "endereco": "Al. Dr. Muricy, 46 - Centro, Curitiba - PR, 80010-120",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Clinica+Eye+Vision+Curitiba/data=!4m7!3m6!1s0x94dce55b1d1b0eff:0xe4648610709c6c6!8m2!3d-25.4368036!4d-49.2700989!16s%2Fg%2F11xtn171sn!19sChIJ_w4bHVvl3JQRxsYJB2FIRg4?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:21.482Z"
+  },
+  {
+    "nome": "SantaLab - Laboratório Santa Casa",
+    "telefone": "(41) 3320-3500",
+    "website": "santacasacuritiba.com.br",
+    "endereco": "Tv. Frei Caneca, 74  Centro, Curitiba  PR  - Centro, Curitiba - PR, 80010-090",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/SantaLab+-+Laborat%C3%B3rio+Santa+Casa/data=!4m7!3m6!1s0x94dce46e68355f09:0x77b5fbd45e510271!8m2!3d-25.4370272!4d-49.2722579!16s%2Fg%2F11v5t_k_31!19sChIJCV81aG7k3JQRcQJRXtT7tXc?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:11:02.259Z"
+  },
+  {
+    "nome": "QueroMed Rui Barbosa  Clinica Médica em Curitiba",
+    "telefone": "(41) 3019-0900",
+    "website": "clinicaqueromed.com.br",
+    "endereco": "Praça Rui Barbosa, 827 - Sala 101 - Rui Barbosa, Curitiba - PR, 80010-030",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/QueroMed+Rui+Barbosa+%7C+Clinica+M%C3%A9dica+em+Curitiba/data=!4m7!3m6!1s0x94dce53380192e29:0xa08542159a172291!8m2!3d-25.4351476!4d-49.2739263!16s%2Fg%2F11fjtqh4zf!19sChIJKS4ZgDPl3JQRkSIXmhVChaA?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:27.826Z"
+  },
+  {
+    "nome": "Aluguel de Consultório em Curitiba",
+    "telefone": "(41) 99959-9333",
+    "website": "emcuritiba.com",
+    "endereco": "MIDHOME Building - Av. Visc. de Guarapuava, 2764 - Room 1801 Room 1911 - Centro, Curitiba - PR, 80010-100",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Aluguel+de+Consult%C3%B3rio+em+Curitiba/data=!4m7!3m6!1s0x94dce469315aaaab:0xa1a27b5ccbe7005b!8m2!3d-25.4362188!4d-49.2685796!16s%2Fg%2F11l6ptqm7c!19sChIJq6paMWnk3JQRWwDny1x7oqE?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:24.000Z"
+  },
+  {
+    "nome": "Clini San",
+    "telefone": "(41) 98745-5574",
+    "website": "linktr.ee",
+    "endereco": "Av. Iguaçu, 1676 - Rebouças, Curitiba - PR, 80250-190",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Clini+San/data=!4m7!3m6!1s0x94dce47bb428c823:0xe7277ddca51adf3d!8m2!3d-25.4451519!4d-49.2775868!16s%2Fg%2F1tgzchcx!19sChIJI8gotHvk3JQRPd8apdx9J-c?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:24.022Z"
+  },
+  {
+    "nome": "Clínica Médica São Bento",
+    "telefone": "(41) 98842-6397",
+    "website": "clinicamedicasaobento.com.br",
+    "endereco": "R. XV de Novembro, 591 - 7 andar - Centro, Curitiba - PR, 80020-310",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+M%C3%A9dica+S%C3%A3o+Bento/data=!4m7!3m6!1s0x94dce46b52e568c7:0xc45a5477e45b07ce!8m2!3d-25.4296551!4d-49.2683394!16s%2Fg%2F11g_7szp9!19sChIJx2jlUmvk3JQRzgdb5HdUWsQ?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:30.312Z"
+  },
+  {
+    "nome": "Believe - Clínica de Estética em Curitiba - Estética Avançada em Curitiba",
+    "telefone": null,
+    "website": null,
+    "endereco": "Av. Sete de Setembro, 3590 - Centro, Curitiba - PR, 80250-210",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Believe+-+Cl%C3%ADnica+de+Est%C3%A9tica+em+Curitiba+-+Est%C3%A9tica+Avan%C3%A7ada+em+Curitiba/data=!4m7!3m6!1s0x94dce54357124a3b:0x79754266169827e2!8m2!3d-25.4401404!4d-49.2736173!16s%2Fg%2F11ybp3d198!19sChIJO0oSV0Pl3JQR4ieYFmZCdXk?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:36.718Z"
+  },
+  {
+    "nome": "Clinica Protheus - PSICOLOGIA e PSIQUIATRIA em Curitiba",
+    "telefone": "(41) 3223-8630",
+    "website": "clinicaprotheus.com.br",
+    "endereco": "Rua XV de Novembro, 266 (Centro) 80020-919 - Centro, Curitiba - PR, 80020-310",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Clinica+Protheus+-+PSICOLOGIA+e+PSIQUIATRIA+em+Curitiba/data=!4m7!3m6!1s0x94dce46cd7503b93:0xe3e2d6995f1720d8!8m2!3d-25.4312062!4d-49.2711866!16s%2Fg%2F11f2sgzfbt!19sChIJkztQ12zk3JQR2CAXX5nW4uM?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:39.375Z"
+  },
+  {
+    "nome": "Policlinica Curitiba",
+    "telefone": "(41) 3232-1645",
+    "website": "policlinicacuritiba.com.br",
+    "endereco": "Praça Zacarias, 36 - Centro, Curitiba - PR, 80020-944",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Policlinica+Curitiba/data=!4m7!3m6!1s0x94dce46d13969aad:0x4f8fe3763c022641!8m2!3d-25.4321287!4d-49.2727572!16s%2Fg%2F1txfq996!19sChIJrZqWE23k3JQRQSYCPHbjj08?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:26:07.124Z"
+  },
+  {
+    "nome": "Batel, Curitiba PR - Huff Life Clínica de Estética e Emagrecimento",
+    "telefone": "(51) 99334-5221",
+    "website": "hufflife.com.br",
+    "endereco": "Prédio Human - R. Dr. Pedrosa, 313 - Sl 716 - Batel, Curitiba - PR, 80420-120",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Batel,+Curitiba+PR+-+Huff+Life+Cl%C3%ADnica+de+Est%C3%A9tica+e+Emagrecimento/data=!4m7!3m6!1s0x94dce5941b65ec29:0x9e0fd0aa987895b6!8m2!3d-25.4385183!4d-49.2771546!16s%2Fg%2F11m_59xc8r!19sChIJKexlG5Tl3JQRtpV4mKrQD54?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:26.224Z"
+  },
+  {
+    "nome": "Clínica Thalys Nunes Estética e Saúde Avançada - Centro Curitiba",
+    "telefone": "(41) 99720-0152",
+    "website": "thalysnunesestetica.com.br",
+    "endereco": "Av. Sete de Setembro, 3590 - Sl 02 - Centro, Curitiba - PR, 80250-210",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+Thalys+Nunes+Est%C3%A9tica+e+Sa%C3%BAde+Avan%C3%A7ada+-+Centro+Curitiba/data=!4m7!3m6!1s0x94dce5bb728abf11:0xe9c009c25a52e872!8m2!3d-25.4401409!4d-49.2739468!16s%2Fg%2F11z76wn54f!19sChIJEb-Kcrvl3JQRcuhSWsIJwOk?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:40.838Z"
+  },
+  {
+    "nome": "Karen Torres  Psicóloga Clínica  Psicóloga Jurídica em Curitiba",
+    "telefone": "(24) 99325-5595",
+    "website": null,
+    "endereco": "Av. Visc. de Guarapuava, 2764 - Centro, Curitiba - PR, 80010-100",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Karen+Torres+%7C+Psic%C3%B3loga+Cl%C3%ADnica+%7C+Psic%C3%B3loga+Jur%C3%ADdica+em+Curitiba/data=!4m7!3m6!1s0x9ea37ee1096457:0x9e9edacb70be3b2e!8m2!3d-25.4362188!4d-49.2685796!16s%2Fg%2F11fmwnzv1w!19sChIJV2QJ4X6jngARLju-cMvanp4?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:36.731Z"
+  },
+  {
+    "nome": "Dr Exame Campo Largo",
+    "telefone": "(41) 3810-1580",
+    "website": "agendamentodrexame.com.br",
+    "endereco": "R. xv de Novembro, 2295 - Centro, Campo Largo - PR, 83601-030",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Dr+Exame+Campo+Largo/data=!4m7!3m6!1s0x94dd17f37331d58b:0xd6c833b9b420ba72!8m2!3d-25.459229!4d-49.530112!16s%2Fg%2F11yc142rv0!19sChIJi9Uxc_MX3ZQRcrogtLkzyNY?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:11:11.980Z"
+  },
+  {
+    "nome": "Clinica Da Mulher - Curitiba Centro Dr Danilo Henrique Ferro da Silva",
+    "telefone": "(41) 3076-7231",
+    "website": "danilosilva168.wixsite.com",
+    "endereco": "Av. Mal. Floriano Peixoto, 306 - Sl 21 - Centro, Curitiba - PR, 80010-130",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Clinica+Da+Mulher+-+Curitiba+Centro+Dr+Danilo+Henrique+Ferro+da+Silva/data=!4m7!3m6!1s0x94dce5ef5132865d:0x1d9317fe6ff67cf!8m2!3d-25.4333953!4d-49.2712418!16s%2Fg%2F11fjtqjq01!19sChIJXYYyUe_l3JQRz2f_5n8x2QE?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:38.108Z"
+  },
+  {
+    "nome": "CLÍNICA TIJUCAS  Clínica de Oftalmologia  Ginecologia  Cirurgia de Catarata em Curitiba  Oftalmologista",
+    "telefone": "(41) 3322-9537",
+    "website": "clinicatijucas.com.br",
+    "endereco": "Av. Luiz Xavier, 68 - salas 1216 a 1220 - Centro, Curitiba - PR, 80020-020",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/CL%C3%8DNICA+TIJUCAS+%7C+Cl%C3%ADnica+de+Oftalmologia+%7C+Ginecologia+%7C+Cirurgia+de+Catarata+em+Curitiba+%7C+Oftalmologista/data=!4m7!3m6!1s0x94dce472bf4be07b:0x10066e23927d3981!8m2!3d-25.4319686!4d-49.2744216!16s%2Fg%2F11c206f1cd!19sChIJe-BLv3Lk3JQRgTl9kiNuBhA?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:26:02.518Z"
+  },
+  {
+    "nome": "Tempo Medicina de Família - Centro - 5º e 6º andares",
+    "telefone": "(41) 99187-0136",
+    "website": "telemedicinatempo.com.br",
+    "endereco": "R. Pedro Ivo, 198 - 5º e 6º andares - Centro, Curitiba - PR, 80010-020",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Tempo+Medicina+de+Fam%C3%ADlia+-+Centro+-+5%C2%BA+e+6%C2%BA+andares/data=!4m7!3m6!1s0x94dce508ff07d195:0x144e3ea03353e5f!8m2!3d-25.4344986!4d-49.2718088!16s%2Fg%2F11j7vqphvj!19sChIJldEH_wjl3JQRXz41A-rjRAE?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:35.427Z"
+  },
+  {
+    "nome": "Acesso Saúde - Curitiba",
+    "telefone": "(41) 3025-3500",
+    "website": "acessosaude.online",
+    "endereco": "R. Barão do Serro Azul, 198 - 1 Andar - Centro, Curitiba - PR, 80020-180",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Acesso+Sa%C3%BAde+-+Curitiba/data=!4m7!3m6!1s0x94dce413bbaa39c1:0x7d43bc9b458a5931!8m2!3d-25.4272556!4d-49.2706763!16s%2Fg%2F1ptvykxgn!19sChIJwTmquxPk3JQRMVmKRZu8Q30?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:11:17.276Z"
+  },
+  {
+    "nome": "Clínica Pulsar Curitiba",
+    "telefone": "(41) 3387-5859",
+    "website": "clinicapulsarcuritiba.com.br",
+    "endereco": "Rua Emiliano Perneta, 424 - 17º andar - Centro, Curitiba - PR, 80420-080",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+Pulsar+Curitiba/data=!4m7!3m6!1s0x94dce4724e45575d:0xb168e96a13533bc8!8m2!3d-25.4354153!4d-49.2760812!16s%2Fg%2F11dymkq2jk!19sChIJXVdFTnLk3JQRyDtTE2rpaLE?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:42.968Z"
+  },
+  {
+    "nome": "Pronto Atendimento do Hospital Santa Casa de Curitiba",
+    "telefone": "(41) 3320-3760",
+    "website": "santacasacuritiba.com.br",
+    "endereco": "R. Alferes Poli, 110 - Centro, Curitiba - PR, 80230-090",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Pronto+Atendimento+do+Hospital+Santa+Casa+de+Curitiba/data=!4m7!3m6!1s0x94dce46e3ea7eab5:0x9d327a0499a1d646!8m2!3d-25.4379884!4d-49.2730228!16s%2Fg%2F11bxc5qcpr!19sChIJteqnPm7k3JQRRtahmQR6Mp0?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:57.897Z"
+  },
+  {
+    "nome": "Clínica Ofta Mais",
+    "telefone": "(41) 99996-2633",
+    "website": null,
+    "endereco": "Rua Emiliano Perneta, 860 - 7 Andar - Centro, Curitiba - PR, 80420-080",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+Ofta+Mais/data=!4m7!3m6!1s0x94dce5e0727c7ba7:0xc547a53e0380f676!8m2!3d-25.4382595!4d-49.2792122!16s%2Fg%2F11y17ck48x!19sChIJp3t8cuDl3JQRdvaAAz6lR8U?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:29.398Z"
+  },
+  {
+    "nome": "Santa Casa Curitiba",
+    "telefone": "(41) 3320-3500",
+    "website": "santacasacuritiba.com.br",
+    "endereco": "Praça Rui Barbosa, 694 - Centro, Curitiba - PR, 80010-030",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Santa+Casa+Curitiba/data=!4m7!3m6!1s0x94dce46df5ad031b:0x1648f3f2190db61a!8m2!3d-25.4368438!4d-49.2727911!16s%2Fg%2F120q70g1!19sChIJGwOt9W3k3JQRGrYNGfLzSBY?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:11:20.689Z"
+  },
+  {
+    "nome": "OTORRINO CLINICA CURITIBA",
+    "telefone": "(41) 3322-2060",
+    "website": "otorrinoclinica.com",
+    "endereco": "R. Comendador Araújo, 510 - Centro, Curitiba - PR, 80420-000",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/OTORRINO+CLINICA+CURITIBA/data=!4m7!3m6!1s0x94dce4746973ee3d:0xe822d76b8f6ee71!8m2!3d-25.4367362!4d-49.280374!16s%2Fg%2F1ptznr27b!19sChIJPe5zaXTk3JQRce72uHYtgg4?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:38.891Z"
+  },
+  {
+    "nome": "Apoio Clínica Curitiba",
+    "telefone": "(41) 99166-2027",
+    "website": "apoioclinicacuritiba.com.br",
+    "endereco": "R. Conselheiro Laurindo, 502 - Cj. 1004 - Centro, Curitiba - PR, 80060-100",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Apoio+Cl%C3%ADnica+Curitiba/data=!4m7!3m6!1s0x94dce46a637002d3:0xac0ad7b3cd596556!8m2!3d-25.4311575!4d-49.2647351!16s%2Fg%2F11b76dzf_7!19sChIJ0wJwY2rk3JQRVmVZzbPXCqw?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:11:22.340Z"
+  },
+  {
+    "nome": "Clínica Canto Oftalmologia - Centro - Curitiba",
+    "telefone": "(41) 3022-8836",
+    "website": "clinicacanto.com.br",
+    "endereco": "R. Voluntários da Pátria, 400 - Conj 201 - 2º Andar - Centro, Curitiba - PR, 80020-000",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+Canto+Oftalmologia+-+Centro+-+Curitiba/data=!4m7!3m6!1s0x94dce472b610da5f:0xef43457c7adfeaa8!8m2!3d-25.4321252!4d-49.2752271!16s%2Fg%2F1tj9vh1c!19sChIJX9oQtnLk3JQRqOrfenxFQ-8?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:11:23.200Z"
+  },
+  {
+    "nome": "Clínicas Lipari - Curitiba",
+    "telefone": "(41) 3323-1609",
+    "website": "clinicaslipari.com.br",
+    "endereco": "R. Des. Motta, 1848 - Centro, Curitiba - PR, 80420-190",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnicas+Lipari+-+Curitiba/data=!4m7!3m6!1s0x94dce4741a08176f:0x8a4873a76624ba96!8m2!3d-25.4378496!4d-49.2799803!16s%2Fg%2F11b632lhwm!19sChIJbxcIGnTk3JQRlrokZqdzSIo?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:30.629Z"
+  },
+  {
+    "nome": "Poli Clínica Curitiba",
+    "telefone": null,
+    "website": "policlinicacuritiba.com.br",
+    "endereco": "Alameda Cabral, 45 - Centro, Curitiba - PR, 80410-210",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Poli+Cl%C3%ADnica+Curitiba/data=!4m7!3m6!1s0x94dce56cb809e391:0x59974885b3f5b9a1!8m2!3d-25.4325405!4d-49.2767194!16s%2Fg%2F11fqb8fq3c!19sChIJkeMJuGzl3JQRobn1s4VIl1k?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:59.045Z"
+  },
+  {
+    "nome": "Clínica Cleuza Canan - Curitiba",
+    "telefone": "(41) 99616-1295",
+    "website": "clinicacleuzacanan.com.br",
+    "endereco": "Av. Sete de Setembro, 2451 - Salas 606 e 901 - Centro, Curitiba - PR, 80230-010",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+Cleuza+Canan+-+Curitiba/data=!4m7!3m6!1s0x94dce30706be2109:0xd869700db0349934!8m2!3d-25.4371697!4d-49.2647618!16s%2Fg%2F11w8sjkdjq!19sChIJCSG-Bgfj3JQRNJk0sA1wadg?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:11:26.135Z"
+  },
+  {
+    "nome": "CLÍNICA CACHUBA - Cirurgia da Catarata em Curitiba, Cirurgia de Miopia, Oftalmologista, Lente Intraocular Trifocal",
+    "telefone": "(41) 3016-8553",
+    "website": "cirurgiacataratacuritiba.com.br",
+    "endereco": "R. Nunes Machado, 68 - 5º Andar Conj 510 - Centro, Curitiba - PR, 80250-000",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/CL%C3%8DNICA+CACHUBA+-+Cirurgia+da+Catarata+em+Curitiba,+Cirurgia+de+Miopia,+Oftalmologista,+Lente+Intraocular+Trifocal/data=!4m7!3m6!1s0x94dce472b610da5f:0xf331b4da27ecc474!8m2!3d-25.4382655!4d-49.2755094!16s%2Fg%2F1thxrsvd!19sChIJX9oQtnLk3JQRdMTsJ9q0MfM?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:54.536Z"
+  },
+  {
+    "nome": "Clinica Nascimento  Nutrólogo  Médico Emagrecimento Curitiba",
+    "telefone": "(41) 99647-5219",
+    "website": null,
+    "endereco": "R. Cândido de Leão, 45 - 8 Andar, Salas: 802, 803, 804, 805 - Centro, Curitiba - PR, 80020-050",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Clinica+Nascimento+%7C+Nutr%C3%B3logo+%7C+M%C3%A9dico+Emagrecimento+Curitiba/data=!4m7!3m6!1s0x94dce412cfdc6645:0x5430f20ed13abe8d!8m2!3d-25.4311154!4d-49.2724619!16s%2Fg%2F11b7w8tszp!19sChIJRWbczxLk3JQRjb460Q7yMFQ?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:11:27.802Z"
+  },
+  {
+    "nome": "Clínica Round Gluteo - Curitiba",
+    "telefone": "(41) 98855-0139",
+    "website": "roundgluteo.com",
+    "endereco": "Av. Sete de Setembro, 2451 - sala 4 (térreo - Rebouças, Curitiba - PR, 80230-010",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+Round+Gluteo+-+Curitiba/data=!4m7!3m6!1s0x94dce59f653c3125:0x1e9ae94783a2d34!8m2!3d-25.4364268!4d-49.2626801!16s%2Fg%2F11qbnmnjfy!19sChIJJTE8ZZ_l3JQRNC06eJSu6QE?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:11:28.662Z"
+  },
+  {
+    "nome": "Solumedi Curitiba Centro",
+    "telefone": "(41) 3014-7796",
+    "website": "solumedi.com.br",
+    "endereco": "R. Barão do Rio Branco, 222 - Lj 07 - Centro, Curitiba - PR, 80010-180",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Solumedi+Curitiba+Centro/data=!4m7!3m6!1s0x94dce5b33e7a7dfd:0xdf72612067f4bc72!8m2!3d-25.4324978!4d-49.2682847!16s%2Fg%2F11t57wsncn!19sChIJ_X16PrPl3JQRcrz0ZyBhct8?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:11:29.505Z"
+  },
+  {
+    "nome": "Clinimed - Clínica de Fisioterapia",
+    "telefone": "(41) 3222-9672",
+    "website": null,
+    "endereco": "Rua Emiliano Perneta, 680 - Conj 1707/08 - Centro, Curitiba - PR, 80420-080",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Clinimed+-+Cl%C3%ADnica+de+Fisioterapia/data=!4m7!3m6!1s0x94dce5abe9ab496d:0x9fc5d19e6969d0a1!8m2!3d-25.4369443!4d-49.2779298!16s%2Fg%2F11fvvjkx_1!19sChIJbUmr6avl3JQRodBpaZ7RxZ8?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:41.741Z"
+  },
+  {
+    "nome": "Clínica Médica Mais Vida",
+    "telefone": "(41) 3333-3322",
+    "website": "medicoagora.com.br",
+    "endereco": "R. Dr. Raul Carneiro Filho, 328 - 80620-440 - Água Verde, Curitiba - PR, 80620-440",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+M%C3%A9dica+Mais+Vida/data=!4m7!3m6!1s0x94dce48edc46b355:0xb64d654cf4b9cffa!8m2!3d-25.4560622!4d-49.2712926!16s%2Fg%2F1ptvvc1k2!19sChIJVbNG3I7k3JQR-s-59ExlTbY?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:55.480Z"
+  },
+  {
+    "nome": "Clinica De Varizes Zandavalli",
+    "telefone": "(41) 99692-9495",
+    "website": "clinicadevarizeszandavalli.com.br",
+    "endereco": "Av. Winston Churchill, 1824 - Capão Raso, Curitiba - PR, 81130-000",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Clinica+De+Varizes+Zandavalli/data=!4m7!3m6!1s0x94dcfdc675de04ff:0x6cac3e32c4f79055!8m2!3d-25.512372!4d-49.295934!16s%2Fg%2F11vsp3q8qq!19sChIJ_wTedcb93JQRVZD3xDI-rGw?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:21.804Z"
+  },
+  {
+    "nome": "Dr. Carlos Afonso Maestri Ginecologista Mastologista",
+    "telefone": "(41) 3089-8888",
+    "website": "drcarlosmaestri9.com.br",
+    "endereco": "R. Reinaldino Schaffenberg de Quadros, 118 - Alto da XV, Curitiba - PR, 80045-070",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Dr.+Carlos+Afonso+Maestri+Ginecologista+Mastologista/data=!4m7!3m6!1s0x94dcfd5d1251e463:0xd9f3054197bfecbd!8m2!3d-25.429611!4d-49.256878!16s%2Fg%2F11hfkwmmcc!19sChIJY-RREl393JQRvey_l0EF89k?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:06:45.840Z"
+  },
+  {
+    "nome": "Hospital de Clínicas",
+    "telefone": "(41) 3360-1800",
+    "website": "gov.br",
+    "endereco": "R. Gen. Carneiro, 181 - Alto da Glória, Curitiba - PR, 80060-900",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Hospital+de+Cl%C3%ADnicas/data=!4m7!3m6!1s0x94dce43e77959da7:0x725e3a407b4e2f45!8m2!3d-25.4243893!4d-49.261933!16s%2Fg%2F1tdzbklv!19sChIJp52Vdz7k3JQRRS9Oe0A6XnI?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:52.144Z"
+  },
+  {
+    "nome": "Hospital Sugisawa",
+    "telefone": "(41) 3259-6500",
+    "website": "hospitalsugisawa.com.br",
+    "endereco": "Av. Iguaçu, 1236 - Room 03 - Rebouças, Curitiba - PR, 80250-190",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Hospital+Sugisawa/data=!4m7!3m6!1s0x94dce46529932ea9:0x3c8cc3bcc1688ef7!8m2!3d-25.4431072!4d-49.2734105!16s%2Fg%2F1tdpstcs!19sChIJqS6TKWXk3JQR945owbzDjDw?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:28.160Z"
+  },
+  {
+    "nome": "Paraná Clínicas - CIM Água Verde 24h",
+    "telefone": "(41) 3340-3030",
+    "website": "paranaclinicas.com.br",
+    "endereco": "Av. Rep. Argentina, 650 - Água Verde, Curitiba - PR, 80240-210",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Paran%C3%A1+Cl%C3%ADnicas+-+CIM+%C3%81gua+Verde+24h/data=!4m7!3m6!1s0x94dce389bd9dfa93:0xbe8c2ba604523072!8m2!3d-25.4522456!4d-49.2881227!16s%2Fg%2F1tc_9tvr!19sChIJk_qdvYnj3JQRcjBSBKYrjL4?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:39.924Z"
+  },
+  {
+    "nome": "Centro Médico Hospital São Vicente Curitiba - FUNEF",
+    "telefone": "(41) 3111-3100",
+    "website": "saovicentecuritiba.com.br",
+    "endereco": "R. Brig. Franco, 1703 - Centro, Curitiba - PR, 80420-200",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Centro+M%C3%A9dico+Hospital+S%C3%A3o+Vicente+Curitiba+-+FUNEF/data=!4m7!3m6!1s0x94dce58b723e4245:0x7dc4190556273432!8m2!3d-25.4359401!4d-49.2802936!16s%2Fg%2F11flh70zg1!19sChIJRUI-covl3JQRMjQnVgUZxH0?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:49.169Z"
+  },
+  {
+    "nome": "Hospital e Maternidade Nossa Senhora de Fátima",
+    "telefone": "(41) 2104-0300",
+    "website": "unimedcuritiba.com.br",
+    "endereco": "Av. Visc. de Guarapuava, 3077 - Centro, Curitiba - PR, 80010-100",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Hospital+e+Maternidade+Nossa+Senhora+de+F%C3%A1tima/data=!4m7!3m6!1s0x94dce46efe410967:0xb5ee30d8f9264049!8m2!3d-25.4380099!4d-49.2711965!16s%2Fg%2F1tdq28jt!19sChIJZwlB_m7k3JQRSUAm-dgw7rU?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:07:21.107Z"
+  },
+  {
+    "nome": "Centro Médico Adventista de Curitiba - UN1",
+    "telefone": null,
+    "website": "clinicaadventista.org.br",
+    "endereco": "Al. Júlia da Costa, 1447 - Bigorrilho, Curitiba - PR, 80730-070",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Centro+M%C3%A9dico+Adventista+de+Curitiba+-+UN1/data=!4m7!3m6!1s0x94dce3f162465d3b:0xc5023fc7e07c20b5!8m2!3d-25.4323868!4d-49.2910033!16s%2Fg%2F1tph2wqx!19sChIJO11GYvHj3JQRtSB84Mc_AsU?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:26:03.711Z"
+  },
+  {
+    "nome": "ASSOCOPAR",
+    "telefone": "(41) 3205-5811",
+    "website": "assocopar.com.br",
+    "endereco": "R. Pedro Ivo, 971 - Centro, Curitiba - PR, 80010-020",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/ASSOCOPAR/data=!4m7!3m6!1s0x94dce46a72ada483:0x63fbfefd574e6903!8m2!3d-25.4318342!4d-49.2643783!16s%2Fg%2F11bwnd48xc!19sChIJg6Stcmrk3JQRA2lOV_3--2M?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:07:24.701Z"
+  },
+  {
+    "nome": "Clinica Katia Oliveira",
+    "telefone": "(41) 99670-2444",
+    "website": null,
+    "endereco": "Av. Visc. de Guarapuava, 2764 - Conj 701 - Centro, Curitiba - PR, 80010-100",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Clinica+Katia+Oliveira/data=!4m7!3m6!1s0x94dce5cfd3dd0041:0x3e51ee7117cc1001!8m2!3d-25.4362188!4d-49.2685796!16s%2Fg%2F11wh9_1r71!19sChIJQQDd08_l3JQRARDMF3HuUT4?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:07:26.744Z"
+  },
+  {
+    "nome": "Dra. Marina Zavadinack",
+    "telefone": "(41) 98702-3003",
+    "website": "marinazavadinackcwb.com.br",
+    "endereco": "ala DOC - Av. Visc. de Guarapuava, 4628 - Sl 310 - Batel, Curitiba - PR, 80240-100",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Dra.+Marina+Zavadinack/data=!4m7!3m6!1s0x94dce36bb33cb695:0xf4eaef3eed17cb60!8m2!3d-25.443142!4d-49.28559!16s%2Fg%2F11zcshfr73!19sChIJlbY8s2vj3JQRYMsX7T7v6vQ?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:10:49.752Z"
+  },
+  {
+    "nome": "MEDSaude Curitiba",
+    "telefone": "(41) 2018-0630",
+    "website": "medsaude.org.br",
+    "endereco": "R. Voluntários da Pátria, 110 - Centro, Curitiba - PR, 80020-000",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/MEDSaude+Curitiba/data=!4m7!3m6!1s0x94dce59a7bb9af1f:0x25245e3dde70da50!8m2!3d-25.433935!4d-49.27327!16s%2Fg%2F11yhbbjmb8!19sChIJH6-5e5rl3JQRUNpw3j1eJCU?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-23T17:11:13.162Z"
+  },
+  {
+    "nome": "Dra Wanessa Storti - Psicologia Infantil e Adolescência",
+    "telefone": "(41) 99848-5260",
+    "website": "sites.google.com",
+    "endereco": "Av. Rep. Argentina, 1160 - Água Verde, Curitiba - PR, 80620-010",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Dra+Wanessa+Storti+-+Psicologia+Infantil+e+Adolesc%C3%AAncia/data=!4m7!3m6!1s0x94dce38563cd0b13:0x4a9f688ac083ea70!8m2!3d-25.456736!4d-49.288923!16s%2Fg%2F11yx73vsr7!19sChIJEwvNY4Xj3JQRcOqDwIpon0o?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:13.648Z"
+  },
+  {
+    "nome": "Dr. Hicham Zraik - Médico do Esporte e Nutrólogo",
+    "telefone": "(41) 99111-9333",
+    "website": "drhicham.com.br",
+    "endereco": "R. Cap. Souza Franco, 848 - Sl 103 - Batel, Curitiba - PR, 80730-420",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Dr.+Hicham+Zraik+-+M%C3%A9dico+do+Esporte+e+Nutr%C3%B3logo/data=!4m7!3m6!1s0x94dce59d1bab8f55:0xc08f0bfaffd7c7ed!8m2!3d-25.43109!4d-49.292458!16s%2Fg%2F11h9mkvt0k!19sChIJVY-rG53l3JQR7cfX__oLj8A?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:14.632Z"
+  },
+  {
+    "nome": "ESTÉTICA ESSENCE - Clínica de Estética no Batel em Curitiba",
+    "telefone": "(41) 99590-9562",
+    "website": null,
+    "endereco": "R. Des. Motta, 1499 - Batel, Curitiba - PR, 80420-164",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/EST%C3%89TICA+ESSENCE+-+Cl%C3%ADnica+de+Est%C3%A9tica+no+Batel+em+Curitiba/data=!4m7!3m6!1s0x94dce470c573cca3:0x83ea2eb40d5d04!8m2!3d-25.4411059!4d-49.278377!16s%2Fg%2F11mwrqwqyj!19sChIJo8xzxXDk3JQRBF0NtC7qgwA?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:45.527Z"
+  },
+  {
+    "nome": "Clínica Josiane Fernandes / Curitiba-PR",
+    "telefone": "(41) 98851-8285",
+    "website": "melasmacontrolado.com.br",
+    "endereco": "R. Dr. Alexandre Gutierrez, 826 - Sl 708 - Água Verde, Curitiba - PR, 80240-130",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+Josiane+Fernandes+%2F+Curitiba-PR/data=!4m7!3m6!1s0x94dce3279dd719b9:0xa96fc019501c42f1!8m2!3d-25.446334!4d-49.285864!16s%2Fg%2F11sd34rwr5!19sChIJuRnXnSfj3JQR8UIcUBnAb6k?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:26:00.306Z"
+  },
+  {
+    "nome": "Dna Saúde e Bem Estar",
+    "telefone": "(41) 99666-0008",
+    "website": null,
+    "endereco": "dna.saude - Av. Sete de Setembro, 3590 - Centro, Curitiba - PR, 80250-210",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Dna+Sa%C3%BAde+e+Bem+Estar/data=!4m7!3m6!1s0x94dce46fed495555:0xa8a8dfffd2f13380!8m2!3d-25.4401409!4d-49.2739468!16s%2Fg%2F11c6q83gv8!19sChIJVVVJ7W_k3JQRgDPx0v_fqKg?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:43.908Z"
+  },
+  {
+    "nome": "Clínica Alfa Men Curitiba",
+    "telefone": "(41) 3016-7676",
+    "website": "alfamen.com.br",
+    "endereco": "Av. Sete de Setembro, 4698 - Batel, Curitiba - PR, 80240-000",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+Alfa+Men+Curitiba/data=!4m7!3m6!1s0x94dce477e3bc6289:0x6cce392287ed894f!8m2!3d-25.444067!4d-49.2839002!16s%2Fg%2F11ddzj8mx4!19sChIJiWK843fk3JQRT4nthyI5zmw?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:26:01.283Z"
+  },
+  {
+    "nome": "Mais Cabello Curitiba",
+    "telefone": "(41) 3500-8580",
+    "website": "maiscabello.com.br",
+    "endereco": "Av. Silva Jardim, 2103 - Água Verde, Curitiba - PR, 80240-020",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Mais+Cabello+Curitiba/data=!4m7!3m6!1s0x94dce58099fc6271:0x7bab2c18e5e1fb53!8m2!3d-25.4449037!4d-49.2805995!16s%2Fg%2F11t77tzqwq!19sChIJcWL8mYDl3JQRU_vh5Rgsq3s?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:50.441Z"
+  },
+  {
+    "nome": "Análises Clínicas Curitiba - Laboratório",
+    "telefone": "(41) 3224-0380",
+    "website": null,
+    "endereco": "Condomínio Edifício Peri - Alameda Dr. Carlos de Carvalho, 846 - Centro, Curitiba - PR, 80430-180",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/An%C3%A1lises+Cl%C3%ADnicas+Curitiba+-+Laborat%C3%B3rio/data=!4m7!3m6!1s0x94dce40ab663a0bb:0x3fb66c72c8c7fb8f!8m2!3d-25.4340769!4d-49.2831726!16s%2Fg%2F1tp30jd5!19sChIJu6Bjtgrk3JQRj_vHyHJstj8?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:51.649Z"
+  },
+  {
+    "nome": "Odontomaski Curitiba",
+    "telefone": "(41) 99664-7424",
+    "website": "instagram.com",
+    "endereco": "Av. Visc. de Guarapuava, 3444 - Sl 407 - Centro, Curitiba - PR, 80250-220",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Odontomaski+Curitiba/data=!4m7!3m6!1s0x94dce471d256d371:0x610b8f3c2a210a5f!8m2!3d-25.4389585!4d-49.2746109!16s%2Fg%2F11h3l_5h7r!19sChIJcdNW0nHk3JQRXwohKjyPC2E?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:17:53.703Z"
+  },
+  {
+    "nome": "Clínica Jardim - Centro Estética Feminina Água Verde - Curitiba/PR",
+    "telefone": null,
+    "website": null,
+    "endereco": "4.1.3243-6000, Av. Silva Jardim - Água Verde, Curitiba - PR",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+Jardim+-+Centro+Est%C3%A9tica+Feminina+%C3%81gua+Verde+-+Curitiba%2FPR/data=!4m7!3m6!1s0x94dce47995f953d7:0x9461c31be92536dd!8m2!3d-25.4450866!4d-49.2804152!16s%2Fg%2F11b66c_zgl!19sChIJ11P5lXnk3JQR3TYl6RvDYZQ?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:26:04.936Z"
+  },
+  {
+    "nome": "WAVE Medicina Fetal e Cardiologia Pediatrica",
+    "telefone": "(41) 3048-9400",
+    "website": "wavemedicinafetal.com.br",
+    "endereco": "Av. Sete de Setembro, 4682 - 10º andar - Batel, Curitiba - PR, 80240-000",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/WAVE+Medicina+Fetal+e+Cardiologia+Pediatrica/data=!4m7!3m6!1s0x94dce567990ba79b:0x449473fae465b7d5!8m2!3d-25.4439144!4d-49.2835922!16s%2Fg%2F11h0n33_kj!19sChIJm6cLmWfl3JQR1bdl5PpzlEQ?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:26:11.232Z"
+  },
+  {
+    "nome": "Laboratório de Análises Clínicas das Nações",
+    "telefone": null,
+    "website": null,
+    "endereco": "Rua Emiliano Perneta, 860 - Centro, Curitiba - PR, 81030-490",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Laborat%C3%B3rio+de+An%C3%A1lises+Cl%C3%ADnicas+das+Na%C3%A7%C3%B5es/data=!4m7!3m6!1s0x94dce47154ea4b23:0x85422974b1acf644!8m2!3d-25.4382338!4d-49.2791924!16s%2Fg%2F11b6hqhxh4!19sChIJI0vqVHHk3JQRRPassXQpQoU?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:18:02.435Z"
+  },
+  {
+    "nome": "Nutricionista Infantil e Psicóloga Infantil Curitiba - Clínica Nutrindo por Amor",
+    "telefone": "(41) 99529-9805",
+    "website": "instagram.com",
+    "endereco": "Rua 24 de Maio, 412 - Rebouças, Curitiba - PR, 80220-060",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Nutricionista+Infantil+e+Psic%C3%B3loga+Infantil+Curitiba+-+Cl%C3%ADnica+Nutrindo+por+Amor/data=!4m7!3m6!1s0x94dce5ad59b7649d:0x366b9db35f377f94!8m2!3d-25.4406321!4d-49.2729542!16s%2Fg%2F11pzxt16kf!19sChIJnWS3Wa3l3JQRlH83X7OdazY?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:18:04.337Z"
+  },
+  {
+    "nome": "Clínica Curitiba de Odontologia",
+    "telefone": "(41) 3121-4141",
+    "website": "clinicacuritiba.com",
+    "endereco": "R. Dr. Alexandre Gutierrez, 572 - Água Verde, Curitiba - PR, 80240-130",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+Curitiba+de+Odontologia/data=!4m7!3m6!1s0x94dce387681890ab:0x9176aaa8aafb0801!8m2!3d-25.4485795!4d-49.2848355!16s%2Fg%2F11c58912wd!19sChIJq5AYaIfj3JQRAQj7qqiqdpE?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:26:09.304Z"
+  },
+  {
+    "nome": "Dra Larissa Cavalli - Reprodução Humana e Ginecologista Ecoville",
+    "telefone": "(41) 99952-0477",
+    "website": "dralarissacavalli.com.br",
+    "endereco": "R. Prof. Pedro Viriato Parigot de Souza, 600 - Mossunguê, Curitiba - PR, 81200-100",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Dra+Larissa+Cavalli+-+Reprodu%C3%A7%C3%A3o+Humana+e+Ginecologista+Ecoville/data=!4m7!3m6!1s0x94dce3b2c1400fc3:0xac917d32bf8d077a!8m2!3d-25.435969!4d-49.317957!16s%2Fg%2F11wqpjtd8c!19sChIJww9AwbLj3JQRegeNvzJ9kaw?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:20.670Z"
+  },
+  {
+    "nome": "Clínica Saint Paul",
+    "telefone": "(41) 3222-2333",
+    "website": "clinicasaintpaul.com.br",
+    "endereco": "R. Des. Motta, 1275 - Batel, Curitiba - PR, 80250-060",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+Saint+Paul/data=!4m7!3m6!1s0x94dce3f57d4ded1d:0x9efd2e4b485fe7d9!8m2!3d-25.4427679!4d-49.2776086!16s%2Fg%2F1yfjt2mtr!19sChIJHe1NffXj3JQR2edfSEsu_Z4?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:23.065Z"
+  },
+  {
+    "nome": "Clínica Vital Equilíbrio Saúde Integrada",
+    "telefone": "(41) 99245-5500",
+    "website": "instagram.com",
+    "endereco": "Av. Visc. de Guarapuava, 3965 - Conj 01 - Batel, Curitiba - PR, 80250-220",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+Vital+Equil%C3%ADbrio+Sa%C3%BAde+Integrada/data=!4m7!3m6!1s0x94dce5d3269f351f:0x48bd0e0376c569c1!8m2!3d-25.4411219!4d-49.2790357!16s%2Fg%2F11rs442277!19sChIJHzWfJtPl3JQRwWnFdgMOvUg?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:25.254Z"
+  },
+  {
+    "nome": "Cendigastro - ENDOSCOPIA em Curitiba",
+    "telefone": "(41) 3224-4233",
+    "website": "cendigastro.com.br",
+    "endereco": "Rua Emiliano Perneta, 860 - 5º andar - Batel, Curitiba - PR, 80420-080",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cendigastro+-+ENDOSCOPIA+em+Curitiba/data=!4m7!3m6!1s0x94dce476aa89e463:0x7532771dc61aedf1!8m2!3d-25.4382595!4d-49.2792122!16s%2Fg%2F11cs3yg3t_!19sChIJY-SJqnbk3JQR8e0axh13MnU?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:31.887Z"
+  },
+  {
+    "nome": "Clínica Cláudia Viegas  Pós cirúrgico Curitiba",
+    "telefone": "(41) 98484-8499",
+    "website": "instagram.com",
+    "endereco": "R. Buenos Aires, 444 - Piso L - Batel, Curitiba - PR, 80250-070",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+Cl%C3%A1udia+Viegas+%7C+P%C3%B3s+cir%C3%BArgico+Curitiba/data=!4m7!3m6!1s0x94dce5c4a54f643b:0x380a35c729d69c7f!8m2!3d-25.4416655!4d-49.279235!16s%2Fg%2F11v_bgqsy6!19sChIJO2RPpcTl3JQRf5zWKcc1Cjg?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:33.318Z"
+  },
+  {
+    "nome": "Clínica de Estética Conte Batel  Curitiba  Conte",
+    "telefone": "(41) 98736-5786",
+    "website": "dracristinasantos.com.br",
+    "endereco": "Clínica QPele - R. Lamenha Lins, 266 - Sl 32/33 - Batel, Curitiba - PR, 80250-020",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+de+Est%C3%A9tica+Conte+Batel+%7C+Curitiba+%7C+Conte/data=!4m7!3m6!1s0x94dce3b0dfc9e333:0x579c2f70a6646034!8m2!3d-25.4391096!4d-49.2762915!16s%2Fg%2F11sg39s620!19sChIJM-PJ37Dj3JQRNGBkpnAvnFc?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:34.566Z"
+  },
+  {
+    "nome": "Clínica PrimeCor",
+    "telefone": "(41) 3042-2020",
+    "website": "clinicaprimecor.com.br",
+    "endereco": "Edifício Mac Saúde - Rua Emiliano Perneta, 860 - 15º andar - Centro, Curitiba - PR, 80420-080",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+PrimeCor/data=!4m7!3m6!1s0x94dce473e74bdf85:0x5a0dfce2870589c5!8m2!3d-25.4382595!4d-49.2792122!16s%2Fg%2F12cp6gtpy!19sChIJhd9L53Pk3JQRxYkFh-L8DVo?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:35.812Z"
+  },
+  {
+    "nome": "MedMe Laboratório de Análises Clínicas",
+    "telefone": "(41) 3500-7606",
+    "website": "medmelab.uniexames.com.br",
+    "endereco": "R. Benjamin Lins, 555 - Batel, Curitiba - PR, 80420-100",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/MedMe+Laborat%C3%B3rio+de+An%C3%A1lises+Cl%C3%ADnicas/data=!4m7!3m6!1s0x94dce3ac1a8bdc15:0x85f4b7f2960d5224!8m2!3d-25.4393571!4d-49.2793508!16s%2Fg%2F11rpd9cw8b!19sChIJFdyLGqzj3JQRJFINlvK39IU?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:37.939Z"
+  },
+  {
+    "nome": "Dr. João Luiz Garcia De Faria",
+    "telefone": "(41) 3123-6550",
+    "website": "drjoaoluizgarcia.com.br",
+    "endereco": "R. Goiás, 70 - Água Verde, Curitiba - PR, 80620-060",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Dr.+Jo%C3%A3o+Luiz+Garcia+De+Faria/data=!4m7!3m6!1s0x94dce330b5329ea3:0xe6ea4504c8e2db6c!8m2!3d-25.464827!4d-49.2906!16s%2Fg%2F11qbv6r229!19sChIJo54ytTDj3JQRbNviyARF6uY?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:45.669Z"
+  },
+  {
+    "nome": "Clínica Arana Oftalmologia Curitiba - Cirurgias e Exames de Retina, Catarata",
+    "telefone": "(41) 3225-3526",
+    "website": "curitibaoftalmologia.com.br",
+    "endereco": "Rua Emiliano Perneta, 860 - 6 ANDAR - Centro, Curitiba - PR, 80420-080",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+Arana+Oftalmologia+Curitiba+-+Cirurgias+e+Exames+de+Retina,+Catarata/data=!4m7!3m6!1s0x94dce476aa810391:0x4f9198dae25f3631!8m2!3d-25.4383849!4d-49.2791277!16s%2Fg%2F11cst1gdbp!19sChIJkQOBqnbk3JQRMTZf4tqYkU8?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:47.413Z"
+  },
+  {
+    "nome": "Hospital Pequeno Príncipe",
+    "telefone": "(41) 3310-1010",
+    "website": "pequenoprincipe.org.br",
+    "endereco": "R. Des. Motta, 1070 - Água Verde, Curitiba - PR, 80250-060",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Hospital+Pequeno+Pr%C3%ADncipe/data=!4m7!3m6!1s0x94dce47af5cf7799:0x85e723b7a226b2d8!8m2!3d-25.4438804!4d-49.2762704!16s%2Fg%2F1tx485ql!19sChIJmXfP9Xrk3JQR2LImorcj54U?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:50.953Z"
+  },
+  {
+    "nome": "Além do Olhar Curitiba - Unidade Batel  Clínica de Estética",
+    "telefone": "(41) 99605-3888",
+    "website": "wa.me",
+    "endereco": "R. Dr. Pedrosa, 406 - Batel, Curitiba - PR, 80420-120",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Al%C3%A9m+do+Olhar+Curitiba+-+Unidade+Batel+%7C+Cl%C3%ADnica+de+Est%C3%A9tica/data=!4m7!3m6!1s0x94dce59a10379f4f:0xd6f1c5d17b19a767!8m2!3d-25.438466!4d-49.2783501!16s%2Fg%2F11msbzz4wk!19sChIJT583EJrl3JQRZ6cZe9HF8dY?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:53.375Z"
+  },
+  {
+    "nome": "Clínica de Psicologia Eurekka - Terapia Comportamental Contextual em Curitiba",
+    "telefone": "(51) 3013-7741",
+    "website": "eurekka.me",
+    "endereco": "R. Buenos Aires, 444 - sl. 141 - Batel, Curitiba - PR, 80250-070",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Cl%C3%ADnica+de+Psicologia+Eurekka+-+Terapia+Comportamental+Contextual+em+Curitiba/data=!4m7!3m6!1s0x94dce503a95bc0e1:0xd3b268499f9e0983!8m2!3d-25.4416262!4d-49.279379!16s%2Fg%2F11qg_rntc5!19sChIJ4cBbqQPl3JQRgwmen0lostM?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:25:56.714Z"
+  },
+  {
+    "nome": "Dra Ana Carolina Arantes  Clínica Odontológica  Invisalign Doctor",
+    "telefone": "(41) 3323-3834",
+    "website": "anaarantesodonto.com.br",
+    "endereco": "R. Buenos Aires, 441 - Sl 134 e sl 135 - Batel, Curitiba - PR, 80250-070",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/Dra+Ana+Carolina+Arantes+%7C+Cl%C3%ADnica+Odontol%C3%B3gica+%7C+Invisalign+Doctor/data=!4m7!3m6!1s0x94dce4769ee863e5:0xf93c5159f5e11e67!8m2!3d-25.4414067!4d-49.2790344!16s%2Fg%2F11c6q90qn1!19sChIJ5WPonnbk3JQRZx7h9VlRPPk?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:26:06.155Z"
+  },
+  {
+    "nome": "CLÍNICA CONTATO DE SAÚDE",
+    "telefone": "(41) 3234-1616",
+    "website": "clinicacontato.com.br",
+    "endereco": "R. Fernando Simas, 221 - Bigorrilho, Curitiba - PR, 80430-190",
+    "cidade": "Curitiba",
+    "categoria": "Clínicas",
+    "urlMaps": "https://www.google.com/maps/place/CL%C3%8DNICA+CONTATO+DE+SA%C3%9ADE/data=!4m7!3m6!1s0x94dce3f489bbfecd:0x8d1df21dee411696!8m2!3d-25.4340316!4d-49.288893!16s%2Fg%2F1w6_pzgp!19sChIJzf67ifTj3JQRlhZB7h3yHY0?authuser=0&hl=pt-BR&rclk=1",
+    "capturadoEm": "2026-07-24T13:26:08.391Z"
+  }
+]

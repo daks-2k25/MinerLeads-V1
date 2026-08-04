@@ -1,25 +1,7 @@
 import { useState } from "react";
+import { API_BASE_URL } from "@/lib/apiConfig";
 import { Lead } from "@/src/models/lead";
 import { SearchStatus } from "@/components/feedback/StatusBanner";
-
-interface EventoStatus {
-  tipo: "status";
-  etapa: string;
-  progresso: number;
-}
-
-interface EventoResultado {
-  tipo: "resultado";
-  leads: Lead[];
-}
-
-interface EventoErro {
-  tipo: "erro";
-  error: string;
-  detalhe?: string;
-}
-
-type EventoScraper = EventoStatus | EventoResultado | EventoErro;
 
 function mensagemSucesso(quantidade: number) {
   if (quantidade === 0) {
@@ -33,6 +15,27 @@ function mensagemSucesso(quantidade: number) {
 
 function mensagemErro(detalhe?: string) {
   return `Não foi possível concluir a busca${detalhe ? `: ${detalhe}` : "."}`;
+}
+
+// O NestJS (HttpExceptionFilter) devolve {statusCode, timestamp, path, message}.
+// Para exceções simples message é string; para ValidationPipe/HttpException
+// específicas (400/404/409...) message é o objeto {statusCode, message, error}
+// original do Nest — por isso a extração tenta os dois formatos.
+function extrairMensagemErroNestJS(corpo: unknown): string | undefined {
+  if (!corpo || typeof corpo !== "object") return undefined;
+
+  const { message } = corpo as { message?: unknown };
+
+  if (typeof message === "string") return message;
+  if (Array.isArray(message)) return message.join(", ");
+
+  if (message && typeof message === "object" && "message" in message) {
+    const interno = (message as { message?: unknown }).message;
+    if (typeof interno === "string") return interno;
+    if (Array.isArray(interno)) return interno.join(", ");
+  }
+
+  return undefined;
 }
 
 export function useScraperSearch(onResultados: (leads: Lead[]) => void) {
@@ -50,52 +53,25 @@ export function useScraperSearch(onResultados: (leads: Lead[]) => void) {
     setProgresso(null);
 
     try {
-      const response = await fetch("/api/scraper", {
+      const response = await fetch(`${API_BASE_URL}/api/scraper`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ termoBusca, cidade, bairro, categoria }),
       });
 
       if (!response.ok) {
-        const erro = await response.json();
+        const corpoErro = await response.json().catch(() => null);
         setStatus({
-          message: mensagemErro(erro.detalhe ?? erro.error ?? "erro ao executar scraping"),
+          message: mensagemErro(extrairMensagemErroNestJS(corpoErro)),
           tone: "error",
         });
         return;
       }
 
-      const reader = response.body?.getReader();
-      if (!reader) {
-        setStatus({ message: mensagemErro("resposta vazia do servidor"), tone: "error" });
-        return;
-      }
+      const leads: Lead[] = await response.json();
 
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const linhas = buffer.split("\n");
-        buffer = linhas.pop() ?? "";
-
-        for (const linha of linhas) {
-          if (!linha.trim()) continue;
-          const evento: EventoScraper = JSON.parse(linha);
-
-          if (evento.tipo === "status") {
-            setProgresso({ etapa: evento.etapa, progresso: evento.progresso });
-          } else if (evento.tipo === "resultado") {
-            setStatus({ message: mensagemSucesso(evento.leads.length), tone: "success" });
-            onResultados(evento.leads);
-          } else if (evento.tipo === "erro") {
-            setStatus({ message: mensagemErro(evento.detalhe ?? evento.error), tone: "error" });
-          }
-        }
-      }
+      setStatus({ message: mensagemSucesso(leads.length), tone: "success" });
+      onResultados(leads);
     } catch (erro) {
       setStatus({
         message: mensagemErro(erro instanceof Error ? erro.message : undefined),

@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Browser, Page, chromium } from 'playwright-core';
 import chromiumServerless from '@sparticuz/chromium';
-import { PrismaService } from '../prisma/prisma.service';
+import { LeadsService } from '../leads/leads.service';
+import { SearchHistoryService } from '../search-history/search-history.service';
 import { StartScraperDto } from './dto/start-scraper.dto';
 import { ScrapedLead } from './interfaces/scraped-lead.interface';
 
@@ -44,14 +45,20 @@ export class ScraperService {
   // réplicas do processo).
   private scrapingEmAndamento = false;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly leadsService: LeadsService,
+    private readonly searchHistoryService: SearchHistoryService,
+  ) {}
 
-  // Etapa 1: só executa o scraping e retorna os leads coletados (com o
-  // placeId extraído da URL).
-  // Etapa 2: para cada placeId extraído, consulta o Prisma (findUnique,
-  // somente leitura) para validar se ele já bate com um Lead existente —
-  // isCached/cachedLeadId. Nenhuma escrita no banco (sem create/update/
-  // upsert/getOrCreateLead) e nenhum uso de SearchHistory/Dashboard/cache.
+  // Etapa 1: executa o scraping e retorna os leads coletados (com o placeId
+  // extraído da URL).
+  // Etapa 2: para cada placeId extraído, consulta o Postgres via LeadsService
+  // (somente leitura) para validar se ele já bate com um Lead existente —
+  // isCached/cachedLeadId.
+  // Etapa 3: persiste cada empresa processada via LeadsService.upsertByPlaceId
+  // (create ou update por placeId).
+  // Etapa 4: registra a busca em SearchHistory e vincula os leads retornados
+  // via SearchHistoryLead. Ainda sem uso do Dashboard.
   async start(dto: StartScraperDto): Promise<ScrapedLead[]> {
     if (this.scrapingEmAndamento) {
       throw new Error('Já existe um scraping em andamento');
@@ -80,7 +87,7 @@ export class ScraperService {
           if (!result.urlMaps) continue;
 
           try {
-            const empresa = await this.processarEmpresa(page, result);
+            const empresa = await this.processarEmpresa(page, result, dto);
             if (empresa) empresas.push(empresa);
           } catch (erro) {
             console.error(
@@ -99,16 +106,20 @@ export class ScraperService {
 
       const tempoDetalhesMs = Date.now() - inicioDetalhes;
       const tempoTotalMs = Date.now() - inicioTotal;
+      const cache = empresas.filter((e) => e.isCached).length;
+      const novos = empresas.filter((e) => !e.isCached).length;
 
       this.registrarLogDePerformance(dto, {
         empresasEncontradas: results.length,
         empresasProcessadas: empresas.length,
-        cache: empresas.filter((e) => e.isCached).length,
-        novos: empresas.filter((e) => !e.isCached).length,
+        cache,
+        novos,
         tempoListaMs,
         tempoDetalhesMs,
         tempoTotalMs,
       });
+
+      await this.registrarHistorico(dto, empresas, novos, cache);
 
       return empresas;
     } finally {
@@ -123,11 +134,21 @@ export class ScraperService {
   private async processarEmpresa(
     page: Page,
     result: CardResultado,
+    dto: StartScraperDto,
   ): Promise<ScrapedLead | null> {
     if (!result.urlMaps) return null;
 
     const url = result.urlMaps;
     const placeId = this.extrairPlaceId(url);
+
+    // Sem placeId não há chave para persistir nem para identificar o lead
+    // depois — a empresa é descartada (não entra na resposta nem é salva).
+    if (!placeId) {
+      console.warn(
+        `[scraper] Não foi possível extrair placeId de "${result.nome ?? url}", empresa descartada.`,
+      );
+      return null;
+    }
 
     return withTimeout(
       (async () => {
@@ -144,13 +165,33 @@ export class ScraperService {
         const { isCached, cachedLeadId } =
           await this.consultarCachePorPlaceId(placeId);
 
-        return {
+        // Etapa 3: persiste a empresa e usa o Lead retornado (create ou
+        // update por placeId) como resposta — garante id/cidade/categoria/
+        // capturadoEm reais e iguais ao que está no banco, para leads novos
+        // e já existentes.
+        const leadPersistido = await this.leadsService.upsertByPlaceId({
           placeId,
           nome: this.limparTexto(companyData.nome),
           telefone: this.limparTexto(companyData.telefone),
           website: this.limparTexto(companyData.website),
           endereco: this.limparTexto(companyData.endereco),
+          cidade: dto.cidade ?? '',
+          categoria: dto.categoria ?? '',
           urlMaps: page.url(),
+          capturadoEm: new Date(),
+        });
+
+        return {
+          id: leadPersistido.id,
+          placeId: leadPersistido.placeId,
+          nome: leadPersistido.nome,
+          telefone: leadPersistido.telefone,
+          website: leadPersistido.website,
+          endereco: leadPersistido.endereco,
+          cidade: leadPersistido.cidade,
+          categoria: leadPersistido.categoria,
+          urlMaps: leadPersistido.urlMaps,
+          capturadoEm: leadPersistido.capturadoEm.toISOString(),
           isCached,
           cachedLeadId,
         };
@@ -208,6 +249,40 @@ export class ScraperService {
     );
   }
 
+  // Etapa 4: registra a busca e vincula os leads retornados ao histórico.
+  // Isolado num try/catch próprio de propósito: uma falha aqui (Postgres
+  // fora do ar, violação de constraint etc.) não pode derrubar a resposta
+  // nem desfazer os leads já persistidos por empresa em processarEmpresa —
+  // eles continuam salvos e são devolvidos ao cliente normalmente.
+  private async registrarHistorico(
+    dto: StartScraperDto,
+    empresas: ScrapedLead[],
+    novos: number,
+    cache: number,
+  ): Promise<void> {
+    try {
+      const historico = await this.searchHistoryService.register({
+        termoBusca: dto.termoBusca,
+        cidade: dto.cidade,
+        bairro: dto.bairro,
+        categoria: dto.categoria,
+        quantidadeLeads: empresas.length,
+        quantidadeNovos: novos,
+        quantidadeCache: cache,
+      });
+
+      await this.searchHistoryService.linkLeads(
+        historico.id,
+        empresas.map((empresa) => empresa.id),
+      );
+    } catch (erro) {
+      console.error(
+        '[scraper] Falha ao registrar histórico da busca (leads já salvos não são afetados):',
+        erro instanceof Error ? erro.message : erro,
+      );
+    }
+  }
+
   // Portado de src/scraper/service.ts
   private limparTexto(texto: string | null): string | null {
     if (!texto) return null;
@@ -229,8 +304,8 @@ export class ScraperService {
     return null;
   }
 
-  // Etapa 2: apenas leitura (findUnique) para validar se o placeId extraído
-  // do scraper já corresponde a um Lead existente no Prisma. Não cria, não
+  // Etapa 2: apenas leitura (via LeadsService) para validar se o placeId
+  // extraído do scraper já corresponde a um Lead existente. Não cria, não
   // atualiza, não faz upsert — só consulta.
   private async consultarCachePorPlaceId(
     placeId: string | null,
@@ -239,10 +314,7 @@ export class ScraperService {
       return { isCached: false, cachedLeadId: null };
     }
 
-    const lead = await this.prisma.lead.findUnique({
-      where: { placeId },
-      select: { id: true },
-    });
+    const lead = await this.leadsService.findByPlaceId(placeId);
 
     return lead
       ? { isCached: true, cachedLeadId: lead.id }

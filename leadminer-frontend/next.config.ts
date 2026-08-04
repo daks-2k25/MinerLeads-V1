@@ -1,12 +1,5 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  outputFileTracingIncludes: {
-    "/api/scraper": [
-      "./node_modules/playwright-core/**/*",
-      "./node_modules/@sparticuz/chromium/**/*",
-    ],
-  },
-};
+const nextConfig: NextConfig = {};
 
 export default nextConfig;

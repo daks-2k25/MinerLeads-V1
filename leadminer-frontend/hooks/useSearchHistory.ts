@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { API_BASE_URL } from "@/lib/apiConfig";
 import { SearchHistory } from "@/src/models/searchHistory";
 
 export function useSearchHistory() {
@@ -11,7 +12,7 @@ export function useSearchHistory() {
     setError(null);
 
     try {
-      const response = await fetch("/api/search-history");
+      const response = await fetch(`${API_BASE_URL}/api/search-history`);
       if (!response.ok) throw new Error("Não foi possível carregar o histórico de buscas");
       const dados: SearchHistory[] = await response.json();
       setHistorico(dados);
@@ -30,7 +31,9 @@ export function useSearchHistory() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/search-history/${id}`, { method: "DELETE" });
+      const response = await fetch(`${API_BASE_URL}/api/search-history/${id}`, {
+        method: "DELETE",
+      });
       if (!response.ok) throw new Error("Não foi possível remover o item do histórico");
       setHistorico((atual) => atual.filter((item) => item.id !== id));
     } catch (erro) {

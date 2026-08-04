@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_BASE_URL } from "@/lib/apiConfig";
 import { Lead } from "@/src/models/lead";
 
 function nomeArquivoDoCabecalho(response: Response): string | null {
@@ -18,7 +19,7 @@ export function useExportLeads(leads: Lead[]) {
     setErro(null);
 
     try {
-      const response = await fetch("/api/export", {
+      const response = await fetch(`${API_BASE_URL}/api/export`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(leads),

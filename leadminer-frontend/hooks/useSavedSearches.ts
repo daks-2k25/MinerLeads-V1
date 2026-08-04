@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { API_BASE_URL } from "@/lib/apiConfig";
 import { SavedSearch } from "@/src/models/savedSearch";
 
 type NovaBuscaSalva = Omit<SavedSearch, "id" | "criadoEm">;
@@ -13,7 +14,7 @@ export function useSavedSearches() {
     setError(null);
 
     try {
-      const response = await fetch("/api/saved-searches");
+      const response = await fetch(`${API_BASE_URL}/api/saved-searches`);
       if (!response.ok) throw new Error("Não foi possível carregar as buscas salvas");
       const dados: SavedSearch[] = await response.json();
       setBuscasSalvas(dados);
@@ -32,7 +33,7 @@ export function useSavedSearches() {
     setError(null);
 
     try {
-      const response = await fetch("/api/saved-searches", {
+      const response = await fetch(`${API_BASE_URL}/api/saved-searches`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(busca),
@@ -53,7 +54,7 @@ export function useSavedSearches() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/saved-searches/${id}`, { method: "DELETE" });
+      const response = await fetch(`${API_BASE_URL}/api/saved-searches/${id}`, { method: "DELETE" });
       if (!response.ok) throw new Error("Não foi possível remover a busca");
       setBuscasSalvas((atual) => atual.filter((busca) => busca.id !== id));
     } catch (erro) {

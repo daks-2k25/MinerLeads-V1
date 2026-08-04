@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_BASE_URL } from "@/lib/apiConfig";
 import { Lead } from "@/src/models/lead";
 import { SearchHistory } from "@/src/models/searchHistory";
 
@@ -28,14 +29,14 @@ export function useExportHistoricoLeads() {
     setErro(null);
 
     try {
-      const responseLeads = await fetch(`/api/search-history/${item.id}/leads`);
+      const responseLeads = await fetch(`${API_BASE_URL}/api/search-history/${item.id}/leads`);
       if (!responseLeads.ok) {
         setErro("Não foi possível carregar os leads dessa busca.");
         return;
       }
       const leads: Lead[] = await responseLeads.json();
 
-      const responseExport = await fetch("/api/export", {
+      const responseExport = await fetch(`${API_BASE_URL}/api/export`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(leads),

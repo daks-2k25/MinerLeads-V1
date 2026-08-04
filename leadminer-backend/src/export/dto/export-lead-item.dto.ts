@@ -21,12 +21,13 @@ export class ExportLeadItemDto {
   @IsString()
   endereco?: string | null;
 
+  // Sem @IsNotEmpty(): leads antigos podem ter sido persistidos com cidade/
+  // categoria vazias (a rota antiga do Next.js nunca validava isso) — o
+  // campo continua exigido como string, só não pode mais rejeitar "".
   @IsString()
-  @IsNotEmpty()
   cidade: string;
 
   @IsString()
-  @IsNotEmpty()
   categoria: string;
 
   @IsString()

@@ -1,10 +1,6 @@
-export interface ScrapedLead {
-  placeId: string | null;
-  nome: string | null;
-  telefone: string | null;
-  website: string | null;
-  endereco: string | null;
-  urlMaps: string;
+import { LeadResponseDto } from '../../leads/dto/lead-response.dto';
+
+export interface ScrapedLead extends LeadResponseDto {
   isCached: boolean;
   cachedLeadId: number | null;
 }

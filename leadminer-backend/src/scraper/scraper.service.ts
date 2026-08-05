@@ -192,7 +192,10 @@ export class ScraperService {
 
     return withTimeout(
       (async () => {
+        // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após identificar onde processarEmpresa() trava no fluxo /maps/place/) ====
+        console.log('[DIAG][empresa] antes navegarComRetry', result.urlMaps);
         await this.navegarComRetry(page, url, result.nome);
+        console.log('[DIAG][empresa] depois navegarComRetry');
 
         try {
           await page.waitForSelector('h1', { timeout: 15000 });
@@ -201,7 +204,9 @@ export class ScraperService {
           // scraper antigo)
         }
 
+        console.log('[DIAG][empresa] antes extrairDadosEmpresa');
         const companyData = await this.extrairDadosEmpresa(page);
+        console.log('[DIAG][empresa] dados extraídos', companyData);
         const { isCached, cachedLeadId } =
           await this.consultarCachePorPlaceId(placeId);
 
@@ -209,6 +214,7 @@ export class ScraperService {
         // update por placeId) como resposta — garante id/cidade/categoria/
         // capturadoEm reais e iguais ao que está no banco, para leads novos
         // e já existentes.
+        console.log('[DIAG][empresa] antes salvar lead');
         const leadPersistido = await this.leadsService.upsertByPlaceId({
           placeId,
           nome: this.limparTexto(companyData.nome),
@@ -220,6 +226,8 @@ export class ScraperService {
           urlMaps: page.url(),
           capturadoEm: new Date(),
         });
+        console.log('[DIAG][empresa] lead salvo');
+        // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
 
         return {
           id: leadPersistido.id,

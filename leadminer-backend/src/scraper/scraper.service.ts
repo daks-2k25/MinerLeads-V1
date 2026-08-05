@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { writeFile } from 'fs/promises';
-import { Browser, Page, chromium } from 'playwright-core';
+import { Browser, BrowserContext, Page, chromium } from 'playwright-core';
 import chromiumServerless from '@sparticuz/chromium';
 import { LeadsService } from '../leads/leads.service';
 import { SearchHistoryService } from '../search-history/search-history.service';
@@ -89,14 +89,29 @@ export class ScraperService {
         const browser = await this.lancarBrowser();
         console.log('[DIAG][scraper] navegador criado com sucesso');
 
+        // Contexto único, mantido aberto durante toda a execução (busca +
+        // todas as empresas). Cada Page continua sendo aberta e fechada
+        // individualmente (regra de páginas separadas preservada) — o que
+        // muda é que elas nascem de context.newPage(), não de
+        // browser.newPage(). browser.newPage() cria implicitamente um
+        // BrowserContext descartável por chamada, que é destruído junto com
+        // a Page ao fechá-la; isso deixava o browser sem nenhum target
+        // registrado entre o fim da busca e o início de cada empresa (e
+        // entre uma empresa e a próxima), janela em que o processo do
+        // Chromium (em especial o binário empacotado do @sparticuz/chromium
+        // usado em produção) pode se considerar ocioso e finalizar sozinho —
+        // causando "Target page, context or browser has been closed" na
+        // próxima chamada de newPage().
+        const context = await browser.newContext();
+
         try {
           // buscarListaDeEmpresas() abre e fecha sua própria Page — se ela
-          // lançar exceção, o finally abaixo ainda fecha o browser.
+          // lançar exceção, o finally abaixo ainda fecha o contexto/browser.
           console.log('[DIAG][scraper] antes de buscarListaDeEmpresas()', {
             buscaComCidade,
           });
           const results = await this.buscarListaDeEmpresas(
-            browser,
+            context,
             buscaComCidade,
           );
           console.log(
@@ -120,7 +135,7 @@ export class ScraperService {
               // extrairDetalheDeEmpresa() abre e fecha sua própria Page de
               // detalhe — nunca reaproveita a Page usada na busca/listagem.
               const empresa = await this.extrairDetalheDeEmpresa(
-                browser,
+                context,
                 result,
                 dto,
               );
@@ -157,7 +172,15 @@ export class ScraperService {
 
           return empresas;
         } finally {
-          console.log('[DIAG][scraper] antes de fechar o navegador');
+          console.log('[DIAG][scraper] antes de fechar o contexto/navegador');
+          try {
+            await context.close();
+          } catch (erroFechamentoContexto) {
+            console.error(
+              'Erro ao fechar o contexto do navegador:',
+              erroFechamentoContexto,
+            );
+          }
           try {
             await browser.close();
             console.log('[DIAG][scraper] navegador fechado com sucesso');
@@ -196,10 +219,14 @@ export class ScraperService {
   // (item 1/5) — nunca interrompe a pesquisa inteira.
   //
   // Regra de ciclo de vida de Page: esta função abre sua própria Page de
-  // detalhe (browser.newPage()) e SEMPRE a fecha no finally, sucesso ou
+  // detalhe (context.newPage()) e SEMPRE a fecha no finally, sucesso ou
   // falha — nunca recebe nem reaproveita a Page usada na busca/listagem.
+  // Recebe o BrowserContext (não o Browser) para que a Page nasça dentro do
+  // contexto único mantido aberto por start() durante toda a execução — ver
+  // comentário em start() sobre por que browser.newPage() isolado causava
+  // "Target page, context or browser has been closed".
   private async extrairDetalheDeEmpresa(
-    browser: Browser,
+    context: BrowserContext,
     result: CardResultado,
     dto: StartScraperDto,
   ): Promise<ScrapedLead | null> {
@@ -221,7 +248,7 @@ export class ScraperService {
 
     return withTimeout(
       (async () => {
-        const page = await browser.newPage();
+        const page = await context.newPage();
 
         try {
           // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após identificar onde extrairDetalheDeEmpresa() trava) ====
@@ -555,15 +582,15 @@ export class ScraperService {
   // chamou: busca/listagem e detalhe de cada empresa nunca compartilham a
   // mesma Page.
   private async buscarListaDeEmpresas(
-    browser: Browser,
+    context: BrowserContext,
     termoBusca: string,
   ): Promise<CardResultado[]> {
     console.log(
-      '[DIAG][scraper] criação da página de busca - antes de browser.newPage()',
+      '[DIAG][scraper] criação da página de busca - antes de context.newPage()',
     );
-    const page = await browser.newPage();
+    const page = await context.newPage();
     console.log(
-      '[DIAG][scraper] criação da página de busca - depois de browser.newPage(), sucesso',
+      '[DIAG][scraper] criação da página de busca - depois de context.newPage(), sucesso',
     );
 
     try {

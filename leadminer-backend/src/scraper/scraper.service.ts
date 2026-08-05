@@ -604,25 +604,30 @@ export class ScraperService {
         return route.continue();
       });
 
-      // Navegação direta para a URL de busca do Google Maps — elimina a
-      // dependência do campo input[name="q"] da homepage (seletor sujeito a
-      // mudança de DOM) e do fluxo fill()/press('Enter').
-      const urlBusca = `https://www.google.com/maps/search/${encodeURIComponent(termoBusca)}`;
-
-      await page.goto(urlBusca, {
+      // Busca via interface do Google Maps: abre a homepage do Maps, preenche
+      // o campo de pesquisa e envia Enter — substitui completamente a
+      // navegação direta para /maps/search/<query>, que se mostrou pouco
+      // confiável para retornar a lista de resultados.
+      await page.goto('https://www.google.com/maps', {
         waitUntil: 'domcontentloaded',
         timeout: 60000,
       });
+      await page.waitForTimeout(5000);
 
-      console.log('[scraper] URL após busca direta:', page.url());
+      const searchInput = page.locator('input[name="q"]');
 
-      // waitForURL(/\/maps\/(search|place)\//) não serve como validação aqui:
-      // como urlBusca já É uma URL /maps/search/<query>, esse padrão já está
-      // satisfeito desde o primeiro instante — antes da SPA do Google Maps
-      // decidir, de forma assíncrona (depois do domcontentloaded), se redireciona
-      // para /maps/place/. Uma espera fixa também não é confiável (o tempo que a
-      // SPA leva para decidir varia). Em vez disso, fazemos polling de page.url()
-      // até por 8s, parando imediatamente se ela mudar para /maps/place/; se o
+      await searchInput.fill(termoBusca);
+      await page.waitForTimeout(2000);
+      await searchInput.press('Enter');
+
+      console.log('[scraper] Busca enviada via interface:', termoBusca);
+
+      // Mesmo com a busca sendo enviada pela interface (fill + Enter), o
+      // Google Maps ainda pode navegar para um de dois destinos possíveis, e
+      // essa decisão pode acontecer de forma assíncrona depois do evento
+      // "load" — por isso continuamos usando polling de page.url() (em vez de
+      // assumir que a URL já estabilizou assim que "load" dispara) por até
+      // 8s, parando imediatamente se ela mudar para /maps/place/; se o
       // tempo esgotar sem isso, seguimos com a última URL observada (ainda em
       // /maps/search/) para o fluxo de lista.
       await page.waitForLoadState('load');

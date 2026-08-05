@@ -60,71 +60,110 @@ export class ScraperService {
   // Etapa 4: registra a busca em SearchHistory e vincula os leads retornados
   // via SearchHistoryLead. Ainda sem uso do Dashboard.
   async start(dto: StartScraperDto): Promise<ScrapedLead[]> {
-    if (this.scrapingEmAndamento) {
-      throw new Error('Já existe um scraping em andamento');
-    }
-
-    this.scrapingEmAndamento = true;
-    const inicioTotal = Date.now();
+    // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após achar a causa do 500) ====
+    console.log('[DIAG][scraper] start() - início do método', { dto });
 
     try {
-      const buscaComCidade = [dto.termoBusca, dto.bairro, dto.cidade]
-        .filter(Boolean)
-        .join(' ');
+      console.log('[DIAG][scraper] validação de concorrência - verificando lock');
+      if (this.scrapingEmAndamento) {
+        console.log('[DIAG][scraper] validação de concorrência - BLOQUEADO (scraping já em andamento)');
+        throw new Error('Já existe um scraping em andamento');
+      }
+      console.log('[DIAG][scraper] validação de concorrência - liberado');
 
-      // Só a abertura do Google Maps / busca inicial pode lançar exceção
-      // global (buscarEmpresasMaps já fecha o browser e relança o erro) —
-      // erro de uma empresa individual nunca chega até aqui.
-      const { browser, page, results } =
-        await this.buscarEmpresasMaps(buscaComCidade);
-      const tempoListaMs = Date.now() - inicioTotal;
-
-      const empresas: ScrapedLead[] = [];
-      const inicioDetalhes = Date.now();
+      this.scrapingEmAndamento = true;
+      const inicioTotal = Date.now();
 
       try {
-        for (const result of results) {
-          if (!result.urlMaps) continue;
+        const buscaComCidade = [dto.termoBusca, dto.bairro, dto.cidade]
+          .filter(Boolean)
+          .join(' ');
 
+        // Só a abertura do Google Maps / busca inicial pode lançar exceção
+        // global (buscarEmpresasMaps já fecha o browser e relança o erro) —
+        // erro de uma empresa individual nunca chega até aqui.
+        console.log('[DIAG][scraper] antes de buscarEmpresasMaps()', { buscaComCidade });
+        const { browser, page, results } =
+          await this.buscarEmpresasMaps(buscaComCidade);
+        console.log('[DIAG][scraper] depois de buscarEmpresasMaps() - retornou com sucesso', {
+          totalResultados: results.length,
+        });
+        const tempoListaMs = Date.now() - inicioTotal;
+
+        const empresas: ScrapedLead[] = [];
+        const inicioDetalhes = Date.now();
+
+        try {
+          console.log('[DIAG][scraper] início do processamento das empresas', {
+            totalEmpresas: results.length,
+          });
+          for (const result of results) {
+            if (!result.urlMaps) continue;
+
+            try {
+              const empresa = await this.processarEmpresa(page, result, dto);
+              if (empresa) empresas.push(empresa);
+            } catch (erro) {
+              console.error(
+                `[scraper] Falha ao processar empresa "${result.nome ?? result.urlMaps}", ignorando e seguindo para a próxima:`,
+                erro instanceof Error ? erro.message : erro,
+              );
+            }
+          }
+          console.log('[DIAG][scraper] fim do processamento das empresas', {
+            processadas: empresas.length,
+          });
+        } finally {
+          console.log('[DIAG][scraper] antes de fechar o navegador');
           try {
-            const empresa = await this.processarEmpresa(page, result, dto);
-            if (empresa) empresas.push(empresa);
-          } catch (erro) {
-            console.error(
-              `[scraper] Falha ao processar empresa "${result.nome ?? result.urlMaps}", ignorando e seguindo para a próxima:`,
-              erro instanceof Error ? erro.message : erro,
-            );
+            await browser.close();
+            console.log('[DIAG][scraper] navegador fechado com sucesso');
+          } catch (erroFechamento) {
+            console.error('Erro ao fechar o navegador:', erroFechamento);
           }
         }
+
+        const tempoDetalhesMs = Date.now() - inicioDetalhes;
+        const tempoTotalMs = Date.now() - inicioTotal;
+        const cache = empresas.filter((e) => e.isCached).length;
+        const novos = empresas.filter((e) => !e.isCached).length;
+
+        this.registrarLogDePerformance(dto, {
+          empresasEncontradas: results.length,
+          empresasProcessadas: empresas.length,
+          cache,
+          novos,
+          tempoListaMs,
+          tempoDetalhesMs,
+          tempoTotalMs,
+        });
+
+        console.log('[DIAG][scraper] antes de registrarHistorico()');
+        await this.registrarHistorico(dto, empresas, novos, cache);
+        console.log('[DIAG][scraper] depois de registrarHistorico()');
+
+        return empresas;
       } finally {
-        try {
-          await browser.close();
-        } catch (erroFechamento) {
-          console.error('Erro ao fechar o navegador:', erroFechamento);
-        }
+        this.scrapingEmAndamento = false;
       }
-
-      const tempoDetalhesMs = Date.now() - inicioDetalhes;
-      const tempoTotalMs = Date.now() - inicioTotal;
-      const cache = empresas.filter((e) => e.isCached).length;
-      const novos = empresas.filter((e) => !e.isCached).length;
-
-      this.registrarLogDePerformance(dto, {
-        empresasEncontradas: results.length,
-        empresasProcessadas: empresas.length,
-        cache,
-        novos,
-        tempoListaMs,
-        tempoDetalhesMs,
-        tempoTotalMs,
-      });
-
-      await this.registrarHistorico(dto, empresas, novos, cache);
-
-      return empresas;
-    } finally {
-      this.scrapingEmAndamento = false;
+    } catch (error) {
+      console.error('[DIAG][scraper] EXCEÇÃO CAPTURADA em start() ==========================');
+      console.error('[DIAG][scraper] error:', error);
+      console.error(
+        '[DIAG][scraper] error.message:',
+        error instanceof Error ? error.message : undefined,
+      );
+      console.error(
+        '[DIAG][scraper] error.stack:',
+        error instanceof Error ? error.stack : undefined,
+      );
+      console.error(
+        '[DIAG][scraper] constructor.name:',
+        (error as { constructor?: { name?: string } })?.constructor?.name,
+      );
+      throw error;
     }
+    // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
   }
 
   // Processa uma única empresa com timeout (item 2) e retry de navegação
@@ -323,13 +362,20 @@ export class ScraperService {
 
   // Portado de src/scraper/maps.ts
   private async lancarBrowser(): Promise<Browser> {
-    return PRECISA_CHROMIUM_EMPACOTADO
+    // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após achar a causa do 500) ====
+    console.log('[DIAG][scraper] abertura do navegador - antes de chromium.launch()', {
+      PRECISA_CHROMIUM_EMPACOTADO,
+    });
+    const browser = PRECISA_CHROMIUM_EMPACOTADO
       ? await chromium.launch({
           args: chromiumServerless.args,
           executablePath: await chromiumServerless.executablePath(),
           headless: true,
         })
       : await chromium.launch({ headless: true });
+    console.log('[DIAG][scraper] abertura do navegador - depois de chromium.launch(), sucesso');
+    return browser;
+    // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
   }
 
   // Portado de src/scraper/maps.ts
@@ -351,7 +397,10 @@ export class ScraperService {
     browser: Browser,
     termoBusca: string,
   ): Promise<{ browser: Browser; page: Page; results: CardResultado[] }> {
+    // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após achar a causa do 500) ====
+    console.log('[DIAG][scraper] criação da página - antes de browser.newPage()');
     const page = await browser.newPage();
+    console.log('[DIAG][scraper] criação da página - depois de browser.newPage(), sucesso');
 
     await page.route('**/*', (route) => {
       const tipo = route.request().resourceType();
@@ -363,15 +412,22 @@ export class ScraperService {
       return route.continue();
     });
 
+    console.log('[DIAG][scraper] navegação para Google Maps - antes de page.goto()');
     await page.goto('https://maps.google.com');
+    console.log('[DIAG][scraper] navegação para Google Maps - depois de page.goto(), sucesso');
     await page.waitForTimeout(5000);
 
     const searchInput = page.locator('input[name="q"]');
 
+    console.log('[DIAG][scraper] preenchimento da pesquisa - antes de fill()/press("Enter")', {
+      termoBusca,
+    });
     await searchInput.fill(termoBusca);
     await page.waitForTimeout(2000);
     await searchInput.press('Enter');
+    console.log('[DIAG][scraper] preenchimento da pesquisa - depois de fill()/press("Enter"), sucesso');
 
+    console.log('[DIAG][scraper] espera pelos resultados - antes de waitForURL()/waitForLoadState()');
     try {
       await page.waitForURL('**/search/**');
     } catch {
@@ -380,6 +436,8 @@ export class ScraperService {
 
     await page.waitForLoadState('load');
     await page.waitForTimeout(5000);
+    console.log('[DIAG][scraper] espera pelos resultados - depois de waitForLoadState(), sucesso');
+    // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA (o restante do método segue sem logs de diagnóstico) ====
 
     const resultsContainer = page.locator('[role="feed"]');
     const empresasMap = new Map<string, CardResultado>();

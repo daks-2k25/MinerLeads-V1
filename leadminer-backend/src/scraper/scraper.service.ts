@@ -280,13 +280,19 @@ export class ScraperService {
     nomeEmpresa: string | null,
   ): Promise<void> {
     try {
-      await page.goto(url);
+      await page.goto(url, {
+        waitUntil: 'domcontentloaded',
+        timeout: 30000,
+      });
     } catch (erroNavegacao) {
       console.warn(
         `[scraper] Erro de navegação ao abrir "${nomeEmpresa ?? url}", tentando novamente (1x):`,
         erroNavegacao instanceof Error ? erroNavegacao.message : erroNavegacao,
       );
-      await page.goto(url);
+      await page.goto(url, {
+        waitUntil: 'domcontentloaded',
+        timeout: 30000,
+      });
     }
   }
 

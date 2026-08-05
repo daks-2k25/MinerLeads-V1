@@ -428,90 +428,106 @@ export class ScraperService {
     await searchInput.press('Enter');
     console.log('[DIAG][scraper] preenchimento da pesquisa - depois de fill()/press("Enter"), sucesso');
 
-    console.log('[DIAG][scraper] espera pelos resultados - antes de waitForURL()/waitForLoadState()');
-    try {
-      await page.waitForURL('**/search/**');
-    } catch {
-      console.log('URL atual:', page.url());
-    }
+    // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA (as etapas abaixo já são lógica real de tratamento search/place, não diagnóstico) ====
 
-    await page.waitForLoadState('load');
-    await page.waitForTimeout(5000);
-    console.log('[DIAG][scraper] espera pelos resultados - depois de waitForLoadState(), sucesso');
-    // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA (o restante do método segue sem logs de diagnóstico) ====
+    // Depois do Enter, o Google Maps navega para um de dois destinos possíveis:
+    // - /maps/search/... quando há múltiplos resultados (fluxo de lista normal);
+    // - /maps/place/... quando a busca é específica o bastante para casar com
+    //   uma única empresa (o Google pula a lista e vai direto ao detalhe).
+    // Sem catch silencioso: se nenhum dos dois ocorrer (ex.: bloqueio/
+    // consentimento), a exceção propaga normalmente e é logada pelo catch de
+    // diagnóstico em start() — não é mais contado como zero resultados.
+    await page.waitForURL(/\/maps\/(search|place)\//);
 
-    const resultsContainer = page.locator('[role="feed"]');
-    const empresasMap = new Map<string, CardResultado>();
+    const urlAposBusca = page.url();
+    console.log('[scraper] URL após busca:', urlAposBusca);
 
-    const coletarResultados = async () => {
-      const cards = await page.$$eval('[role="article"]', (articles) =>
-        articles.map((article) => {
-          const link = article.querySelector('a');
-          return {
-            nome: link?.getAttribute('aria-label') ?? null,
-            urlMaps: link?.getAttribute('href') ?? null,
-          };
-        }),
+    let results: CardResultado[];
+
+    if (urlAposBusca.includes('/maps/place/')) {
+      console.log(
+        '[scraper] Google Maps retornou direto para a página de detalhe (resultado único) em vez da lista de busca — tratando como lista de 1 empresa:',
+        urlAposBusca,
       );
 
-      for (const card of cards) {
-        if (card.urlMaps && !empresasMap.has(card.urlMaps)) {
-          empresasMap.set(card.urlMaps, card);
-        }
-      }
-    };
+      results = [{ nome: null, urlMaps: urlAposBusca }];
+    } else {
+      await page.waitForLoadState('load');
+      await page.waitForTimeout(5000);
 
-    await coletarResultados();
+      const resultsContainer = page.locator('[role="feed"]');
+      const empresasMap = new Map<string, CardResultado>();
 
-    for (let i = 0; i < 5; i++) {
-      try {
-        await resultsContainer.evaluate((el) => {
-          el.scrollTop = el.scrollHeight;
-        });
-      } catch (erro) {
-        console.log(
-          '[scraper] Painel de resultados (role=feed) não encontrado ao rolar, interrompendo scroll:',
-          erro,
+      const coletarResultados = async () => {
+        const cards = await page.$$eval('[role="article"]', (articles) =>
+          articles.map((article) => {
+            const link = article.querySelector('a');
+            return {
+              nome: link?.getAttribute('aria-label') ?? null,
+              urlMaps: link?.getAttribute('href') ?? null,
+            };
+          }),
         );
 
-        // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após identificar a causa do timeout de [role="feed"]) ====
-        // Best-effort: captura screenshot/HTML/URL/título para descobrir o
-        // que o Google retornou. Envolto em try/catch próprio para nunca
-        // alterar o fluxo/comportamento do scraper, mesmo se a captura falhar.
-        try {
-          const urlAtual = page.url();
-          const tituloAtual = await page.title();
-          const html = await page.content();
-
-          console.log('[DIAG][scraper] role=feed não encontrado - URL atual:', urlAtual);
-          console.log('[DIAG][scraper] role=feed não encontrado - título da página:', tituloAtual);
-          console.log(
-            '[DIAG][scraper] role=feed não encontrado - tamanho do HTML capturado (caracteres):',
-            html.length,
-          );
-
-          await page.screenshot({ path: '/tmp/google-maps-debug.png' });
-          await writeFile('/tmp/google-maps-debug.html', html);
-
-          console.log(
-            '[DIAG][scraper] role=feed não encontrado - screenshot e HTML salvos em /tmp/google-maps-debug.png e /tmp/google-maps-debug.html',
-          );
-        } catch (erroDiagnostico) {
-          console.error(
-            '[DIAG][scraper] Falha ao capturar diagnóstico (screenshot/HTML) do timeout de role=feed:',
-            erroDiagnostico,
-          );
+        for (const card of cards) {
+          if (card.urlMaps && !empresasMap.has(card.urlMaps)) {
+            empresasMap.set(card.urlMaps, card);
+          }
         }
-        // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
+      };
 
-        break;
+      await coletarResultados();
+
+      for (let i = 0; i < 5; i++) {
+        try {
+          await resultsContainer.evaluate((el) => {
+            el.scrollTop = el.scrollHeight;
+          });
+        } catch (erro) {
+          console.log(
+            '[scraper] Painel de resultados (role=feed) não encontrado ao rolar, interrompendo scroll:',
+            erro,
+          );
+
+          // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após identificar a causa do timeout de [role="feed"]) ====
+          // Best-effort: captura screenshot/HTML/URL/título para descobrir o
+          // que o Google retornou. Envolto em try/catch próprio para nunca
+          // alterar o fluxo/comportamento do scraper, mesmo se a captura falhar.
+          try {
+            const urlAtual = page.url();
+            const tituloAtual = await page.title();
+            const html = await page.content();
+
+            console.log('[DIAG][scraper] role=feed não encontrado - URL atual:', urlAtual);
+            console.log('[DIAG][scraper] role=feed não encontrado - título da página:', tituloAtual);
+            console.log(
+              '[DIAG][scraper] role=feed não encontrado - tamanho do HTML capturado (caracteres):',
+              html.length,
+            );
+
+            await page.screenshot({ path: '/tmp/google-maps-debug.png' });
+            await writeFile('/tmp/google-maps-debug.html', html);
+
+            console.log(
+              '[DIAG][scraper] role=feed não encontrado - screenshot e HTML salvos em /tmp/google-maps-debug.png e /tmp/google-maps-debug.html',
+            );
+          } catch (erroDiagnostico) {
+            console.error(
+              '[DIAG][scraper] Falha ao capturar diagnóstico (screenshot/HTML) do timeout de role=feed:',
+              erroDiagnostico,
+            );
+          }
+          // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
+
+          break;
+        }
+
+        await page.waitForTimeout(2000);
+        await coletarResultados();
       }
 
-      await page.waitForTimeout(2000);
-      await coletarResultados();
+      results = Array.from(empresasMap.values());
     }
-
-    const results = Array.from(empresasMap.values());
 
     return { browser, page, results };
   }

@@ -20,7 +20,9 @@ interface CardResultado {
 // precisam do binário empacotado do @sparticuz/chromium. O Render define
 // RENDER=true automaticamente em todos os serviços.
 const PRECISA_CHROMIUM_EMPACOTADO = Boolean(
-  process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.RENDER,
+  process.env.VERCEL ||
+  process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  process.env.RENDER,
 );
 
 // Etapa de resiliência: orçamento máximo por empresa (navegação + extração).
@@ -69,9 +71,13 @@ export class ScraperService {
     console.log('[DIAG][scraper] start() - início do método', { dto });
 
     try {
-      console.log('[DIAG][scraper] validação de concorrência - verificando lock');
+      console.log(
+        '[DIAG][scraper] validação de concorrência - verificando lock',
+      );
       if (this.scrapingEmAndamento) {
-        console.log('[DIAG][scraper] validação de concorrência - BLOQUEADO (scraping já em andamento)');
+        console.log(
+          '[DIAG][scraper] validação de concorrência - BLOQUEADO (scraping já em andamento)',
+        );
         throw new Error('Já existe um scraping em andamento');
       }
       console.log('[DIAG][scraper] validação de concorrência - liberado');
@@ -87,12 +93,17 @@ export class ScraperService {
         // Só a abertura do Google Maps / busca inicial pode lançar exceção
         // global (buscarEmpresasMaps já fecha o browser e relança o erro) —
         // erro de uma empresa individual nunca chega até aqui.
-        console.log('[DIAG][scraper] antes de buscarEmpresasMaps()', { buscaComCidade });
+        console.log('[DIAG][scraper] antes de buscarEmpresasMaps()', {
+          buscaComCidade,
+        });
         const { browser, page, results } =
           await this.buscarEmpresasMaps(buscaComCidade);
-        console.log('[DIAG][scraper] depois de buscarEmpresasMaps() - retornou com sucesso', {
-          totalResultados: results.length,
-        });
+        console.log(
+          '[DIAG][scraper] depois de buscarEmpresasMaps() - retornou com sucesso',
+          {
+            totalResultados: results.length,
+          },
+        );
         const tempoListaMs = Date.now() - inicioTotal;
 
         const empresas: ScrapedLead[] = [];
@@ -152,7 +163,9 @@ export class ScraperService {
         this.scrapingEmAndamento = false;
       }
     } catch (error) {
-      console.error('[DIAG][scraper] EXCEÇÃO CAPTURADA em start() ==========================');
+      console.error(
+        '[DIAG][scraper] EXCEÇÃO CAPTURADA em start() ==========================',
+      );
       console.error('[DIAG][scraper] error:', error);
       console.error(
         '[DIAG][scraper] error.message:',
@@ -291,7 +304,9 @@ export class ScraperService {
     },
   ): void {
     const emSegundos = (ms: number) => (ms / 1000).toFixed(1);
-    const termoCompleto = [dto.termoBusca, dto.cidade].filter(Boolean).join(' ');
+    const termoCompleto = [dto.termoBusca, dto.cidade]
+      .filter(Boolean)
+      .join(' ');
 
     console.log(
       [
@@ -382,9 +397,12 @@ export class ScraperService {
   // Portado de src/scraper/maps.ts
   private async lancarBrowser(): Promise<Browser> {
     // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após achar a causa do 500) ====
-    console.log('[DIAG][scraper] abertura do navegador - antes de chromium.launch()', {
-      PRECISA_CHROMIUM_EMPACOTADO,
-    });
+    console.log(
+      '[DIAG][scraper] abertura do navegador - antes de chromium.launch()',
+      {
+        PRECISA_CHROMIUM_EMPACOTADO,
+      },
+    );
     const browser = PRECISA_CHROMIUM_EMPACOTADO
       ? await chromium.launch({
           args: chromiumServerless.args,
@@ -392,7 +410,9 @@ export class ScraperService {
           headless: true,
         })
       : await chromium.launch({ headless: true });
-    console.log('[DIAG][scraper] abertura do navegador - depois de chromium.launch(), sucesso');
+    console.log(
+      '[DIAG][scraper] abertura do navegador - depois de chromium.launch(), sucesso',
+    );
     return browser;
     // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
   }
@@ -443,9 +463,13 @@ export class ScraperService {
     termoBusca: string,
   ): Promise<{ browser: Browser; page: Page; results: CardResultado[] }> {
     // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após achar a causa do 500) ====
-    console.log('[DIAG][scraper] criação da página - antes de browser.newPage()');
+    console.log(
+      '[DIAG][scraper] criação da página - antes de browser.newPage()',
+    );
     const page = await browser.newPage();
-    console.log('[DIAG][scraper] criação da página - depois de browser.newPage(), sucesso');
+    console.log(
+      '[DIAG][scraper] criação da página - depois de browser.newPage(), sucesso',
+    );
 
     await page.route('**/*', (route) => {
       const tipo = route.request().resourceType();
@@ -493,124 +517,158 @@ export class ScraperService {
         urlAposBusca,
       );
 
-      results = [{ nome: null, urlMaps: urlAposBusca, paginaJaCarregada: true }];
+      results = [
+        { nome: null, urlMaps: urlAposBusca, paginaJaCarregada: true },
+      ];
     } else {
-      await page.waitForLoadState('load');
-      await page.waitForTimeout(5000);
+      // Verificação adicional: o Google pode redirecionar client-side para
+      // /maps/place/ depois que já entramos no fluxo de lista (a URL só
+      // "estabiliza" de fato depois de alguns segundos). Checamos de novo
+      // antes de tocar em role="feed"/role="article" para não tentar coletar
+      // uma lista que não existe mais.
+      const urlAntesDaLista = await this.aguardarEstabilizacaoUrl(
+        page,
+        5000,
+        300,
+      );
 
-      const resultsContainer = page.locator('[role="feed"]');
-      const empresasMap = new Map<string, CardResultado>();
-
-      const coletarResultados = async () => {
-        const cards = await page.$$eval('[role="article"]', (articles) =>
-          articles.map((article) => {
-            const link = article.querySelector('a');
-            return {
-              nome: link?.getAttribute('aria-label') ?? null,
-              urlMaps: link?.getAttribute('href') ?? null,
-            };
-          }),
+      if (urlAntesDaLista.includes('/maps/place/')) {
+        console.log(
+          '[scraper] Google Maps redirecionou para a página de detalhe (resultado único) durante o fluxo de lista, antes de usar role="feed"/role="article" — tratando como lista de 1 empresa:',
+          urlAntesDaLista,
         );
 
-        for (const card of cards) {
-          if (card.urlMaps && !empresasMap.has(card.urlMaps)) {
-            empresasMap.set(card.urlMaps, card);
-          }
-        }
-      };
+        results = [
+          { nome: null, urlMaps: urlAntesDaLista, paginaJaCarregada: true },
+        ];
+      } else {
+        await page.waitForLoadState('load');
+        await page.waitForTimeout(5000);
 
-      await coletarResultados();
+        const resultsContainer = page.locator('[role="feed"]');
+        const empresasMap = new Map<string, CardResultado>();
 
-      for (let i = 0; i < 5; i++) {
-        try {
-          await resultsContainer.evaluate((el) => {
-            el.scrollTop = el.scrollHeight;
-          });
-        } catch (erro) {
-          console.log(
-            '[scraper] Painel de resultados (role=feed) não encontrado ao rolar, interrompendo scroll:',
-            erro,
+        const coletarResultados = async () => {
+          const cards = await page.$$eval('[role="article"]', (articles) =>
+            articles.map((article) => {
+              const link = article.querySelector('a');
+              return {
+                nome: link?.getAttribute('aria-label') ?? null,
+                urlMaps: link?.getAttribute('href') ?? null,
+              };
+            }),
           );
 
-          // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após identificar a causa do timeout de [role="feed"]) ====
-          // Best-effort: captura screenshot/HTML/URL/título para descobrir o
-          // que o Google retornou. Envolto em try/catch próprio para nunca
-          // alterar o fluxo/comportamento do scraper, mesmo se a captura falhar.
-          try {
-            const urlAtual = page.url();
-            const tituloAtual = await page.title();
-            const html = await page.content();
-
-            console.log('[DIAG][scraper] role=feed não encontrado - URL atual:', urlAtual);
-            console.log('[DIAG][scraper] role=feed não encontrado - título da página:', tituloAtual);
-            console.log(
-              '[DIAG][scraper] role=feed não encontrado - tamanho do HTML capturado (caracteres):',
-              html.length,
-            );
-
-            // Análise em memória do HTML capturado — não depende de acesso ao
-            // filesystem do Render, só dos logs. Contagens são case-sensitive
-            // (strings literais do HTML); a busca por indicadores de bloqueio
-            // é case-insensitive (título/HTML podem variar maiúsculas).
-            const htmlEmMinusculas = html.toLowerCase();
-            const tituloEmMinusculas = tituloAtual.toLowerCase();
-
-            const possiveisIndicadoresDeBloqueio = [
-              'consent',
-              'captcha',
-              'unusual traffic',
-            ].filter(
-              (termo) =>
-                tituloEmMinusculas.includes(termo) ||
-                htmlEmMinusculas.includes(termo),
-            );
-
-            const contarOcorrencias = (texto: string, termo: string) =>
-              texto.split(termo).length - 1;
-
-            const resumoDiagnosticoRoleFeed = {
-              urlAtual,
-              tituloAtual,
-              tamanhoHtml: html.length,
-              possiveisIndicadoresDeBloqueio,
-              ocorrencias: {
-                'role="feed"': contarOcorrencias(html, 'role="feed"'),
-                'role="article"': contarOcorrencias(html, 'role="article"'),
-                'Não foi possível': contarOcorrencias(html, 'Não foi possível'),
-                'Parece que você está fazendo muitas pesquisas': contarOcorrencias(
-                  html,
-                  'Parece que você está fazendo muitas pesquisas',
-                ),
-              },
-            };
-
-            console.log(
-              '[DIAG][scraper] resumo do diagnóstico de role=feed:',
-              resumoDiagnosticoRoleFeed,
-            );
-
-            await page.screenshot({ path: '/tmp/google-maps-debug.png' });
-            await writeFile('/tmp/google-maps-debug.html', html);
-
-            console.log(
-              '[DIAG][scraper] role=feed não encontrado - screenshot e HTML salvos em /tmp/google-maps-debug.png e /tmp/google-maps-debug.html',
-            );
-          } catch (erroDiagnostico) {
-            console.error(
-              '[DIAG][scraper] Falha ao capturar diagnóstico (screenshot/HTML) do timeout de role=feed:',
-              erroDiagnostico,
-            );
+          for (const card of cards) {
+            if (card.urlMaps && !empresasMap.has(card.urlMaps)) {
+              empresasMap.set(card.urlMaps, card);
+            }
           }
-          // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
+        };
 
-          break;
+        await coletarResultados();
+
+        for (let i = 0; i < 5; i++) {
+          try {
+            await resultsContainer.evaluate((el) => {
+              el.scrollTop = el.scrollHeight;
+            });
+          } catch (erro) {
+            console.log(
+              '[scraper] Painel de resultados (role=feed) não encontrado ao rolar, interrompendo scroll:',
+              erro,
+            );
+
+            // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após identificar a causa do timeout de [role="feed"]) ====
+            // Best-effort: captura screenshot/HTML/URL/título para descobrir o
+            // que o Google retornou. Envolto em try/catch próprio para nunca
+            // alterar o fluxo/comportamento do scraper, mesmo se a captura falhar.
+            try {
+              const urlAtual = page.url();
+              const tituloAtual = await page.title();
+              const html = await page.content();
+
+              console.log(
+                '[DIAG][scraper] role=feed não encontrado - URL atual:',
+                urlAtual,
+              );
+              console.log(
+                '[DIAG][scraper] role=feed não encontrado - título da página:',
+                tituloAtual,
+              );
+              console.log(
+                '[DIAG][scraper] role=feed não encontrado - tamanho do HTML capturado (caracteres):',
+                html.length,
+              );
+
+              // Análise em memória do HTML capturado — não depende de acesso ao
+              // filesystem do Render, só dos logs. Contagens são case-sensitive
+              // (strings literais do HTML); a busca por indicadores de bloqueio
+              // é case-insensitive (título/HTML podem variar maiúsculas).
+              const htmlEmMinusculas = html.toLowerCase();
+              const tituloEmMinusculas = tituloAtual.toLowerCase();
+
+              const possiveisIndicadoresDeBloqueio = [
+                'consent',
+                'captcha',
+                'unusual traffic',
+              ].filter(
+                (termo) =>
+                  tituloEmMinusculas.includes(termo) ||
+                  htmlEmMinusculas.includes(termo),
+              );
+
+              const contarOcorrencias = (texto: string, termo: string) =>
+                texto.split(termo).length - 1;
+
+              const resumoDiagnosticoRoleFeed = {
+                urlAtual,
+                tituloAtual,
+                tamanhoHtml: html.length,
+                possiveisIndicadoresDeBloqueio,
+                ocorrencias: {
+                  'role="feed"': contarOcorrencias(html, 'role="feed"'),
+                  'role="article"': contarOcorrencias(html, 'role="article"'),
+                  'Não foi possível': contarOcorrencias(
+                    html,
+                    'Não foi possível',
+                  ),
+                  'Parece que você está fazendo muitas pesquisas':
+                    contarOcorrencias(
+                      html,
+                      'Parece que você está fazendo muitas pesquisas',
+                    ),
+                },
+              };
+
+              console.log(
+                '[DIAG][scraper] resumo do diagnóstico de role=feed:',
+                resumoDiagnosticoRoleFeed,
+              );
+
+              await page.screenshot({ path: '/tmp/google-maps-debug.png' });
+              await writeFile('/tmp/google-maps-debug.html', html);
+
+              console.log(
+                '[DIAG][scraper] role=feed não encontrado - screenshot e HTML salvos em /tmp/google-maps-debug.png e /tmp/google-maps-debug.html',
+              );
+            } catch (erroDiagnostico) {
+              console.error(
+                '[DIAG][scraper] Falha ao capturar diagnóstico (screenshot/HTML) do timeout de role=feed:',
+                erroDiagnostico,
+              );
+            }
+            // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
+
+            break;
+          }
+
+          await page.waitForTimeout(2000);
+          await coletarResultados();
         }
 
-        await page.waitForTimeout(2000);
-        await coletarResultados();
+        results = Array.from(empresasMap.values());
       }
-
-      results = Array.from(empresasMap.values());
     }
 
     return { browser, page, results };

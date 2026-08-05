@@ -411,6 +411,32 @@ export class ScraperService {
     }
   }
 
+  // Faz polling de page.url() por até `timeoutMs` (checando a cada
+  // `intervaloMs`) para detectar se o Google Maps redireciona client-side de
+  // /maps/search/ para /maps/place/ depois da navegação inicial. Retorna
+  // assim que /maps/place/ aparecer; se o tempo esgotar sem isso, devolve a
+  // última URL observada (presumivelmente ainda em /maps/search/).
+  private async aguardarEstabilizacaoUrl(
+    page: Page,
+    timeoutMs: number,
+    intervaloMs: number,
+  ): Promise<string> {
+    const inicio = Date.now();
+    let urlAtual = page.url();
+
+    while (Date.now() - inicio < timeoutMs) {
+      urlAtual = page.url();
+
+      if (urlAtual.includes('/maps/place/')) {
+        return urlAtual;
+      }
+
+      await page.waitForTimeout(intervaloMs);
+    }
+
+    return page.url();
+  }
+
   // Portado de src/scraper/maps.ts
   private async buscarEmpresasMapsComBrowser(
     browser: Browser,
@@ -445,20 +471,18 @@ export class ScraperService {
 
     console.log('[scraper] URL após busca direta:', page.url());
 
-    // waitForURL(/\/maps\/(search|place)\//) não serve mais como validação
-    // aqui: como urlBusca já É uma URL /maps/search/<query>, esse padrão já
-    // está satisfeito desde o primeiro instante — antes da SPA do Google Maps
+    // waitForURL(/\/maps\/(search|place)\//) não serve como validação aqui:
+    // como urlBusca já É uma URL /maps/search/<query>, esse padrão já está
+    // satisfeito desde o primeiro instante — antes da SPA do Google Maps
     // decidir, de forma assíncrona (depois do domcontentloaded), se redireciona
-    // para /maps/place/. Isso fazia a leitura de page.url() acontecer cedo
-    // demais, antes do redirecionamento real acontecer.
-    //
-    // Em vez disso: esperamos a navegação terminar (load) e damos um pequeno
-    // período para a SPA processar um eventual redirecionamento client-side
-    // antes de capturar page.url() de novo e só então decidir o branch.
+    // para /maps/place/. Uma espera fixa também não é confiável (o tempo que a
+    // SPA leva para decidir varia). Em vez disso, fazemos polling de page.url()
+    // até por 8s, parando imediatamente se ela mudar para /maps/place/; se o
+    // tempo esgotar sem isso, seguimos com a última URL observada (ainda em
+    // /maps/search/) para o fluxo de lista.
     await page.waitForLoadState('load');
-    await page.waitForTimeout(3000);
 
-    const urlAposBusca = page.url();
+    const urlAposBusca = await this.aguardarEstabilizacaoUrl(page, 8000, 300);
     console.log('[scraper] URL após busca (estabilizada):', urlAposBusca);
 
     let results: CardResultado[];

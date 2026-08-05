@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { writeFile } from 'fs/promises';
 import { Browser, Page, chromium } from 'playwright-core';
 import chromiumServerless from '@sparticuz/chromium';
 import { LeadsService } from '../leads/leads.service';
@@ -472,6 +473,37 @@ export class ScraperService {
           '[scraper] Painel de resultados (role=feed) não encontrado ao rolar, interrompendo scroll:',
           erro,
         );
+
+        // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após identificar a causa do timeout de [role="feed"]) ====
+        // Best-effort: captura screenshot/HTML/URL/título para descobrir o
+        // que o Google retornou. Envolto em try/catch próprio para nunca
+        // alterar o fluxo/comportamento do scraper, mesmo se a captura falhar.
+        try {
+          const urlAtual = page.url();
+          const tituloAtual = await page.title();
+          const html = await page.content();
+
+          console.log('[DIAG][scraper] role=feed não encontrado - URL atual:', urlAtual);
+          console.log('[DIAG][scraper] role=feed não encontrado - título da página:', tituloAtual);
+          console.log(
+            '[DIAG][scraper] role=feed não encontrado - tamanho do HTML capturado (caracteres):',
+            html.length,
+          );
+
+          await page.screenshot({ path: '/tmp/google-maps-debug.png' });
+          await writeFile('/tmp/google-maps-debug.html', html);
+
+          console.log(
+            '[DIAG][scraper] role=feed não encontrado - screenshot e HTML salvos em /tmp/google-maps-debug.png e /tmp/google-maps-debug.html',
+          );
+        } catch (erroDiagnostico) {
+          console.error(
+            '[DIAG][scraper] Falha ao capturar diagnóstico (screenshot/HTML) do timeout de role=feed:',
+            erroDiagnostico,
+          );
+        }
+        // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
+
         break;
       }
 

@@ -513,6 +513,47 @@ export class ScraperService {
               html.length,
             );
 
+            // Análise em memória do HTML capturado — não depende de acesso ao
+            // filesystem do Render, só dos logs. Contagens são case-sensitive
+            // (strings literais do HTML); a busca por indicadores de bloqueio
+            // é case-insensitive (título/HTML podem variar maiúsculas).
+            const htmlEmMinusculas = html.toLowerCase();
+            const tituloEmMinusculas = tituloAtual.toLowerCase();
+
+            const possiveisIndicadoresDeBloqueio = [
+              'consent',
+              'captcha',
+              'unusual traffic',
+            ].filter(
+              (termo) =>
+                tituloEmMinusculas.includes(termo) ||
+                htmlEmMinusculas.includes(termo),
+            );
+
+            const contarOcorrencias = (texto: string, termo: string) =>
+              texto.split(termo).length - 1;
+
+            const resumoDiagnosticoRoleFeed = {
+              urlAtual,
+              tituloAtual,
+              tamanhoHtml: html.length,
+              possiveisIndicadoresDeBloqueio,
+              ocorrencias: {
+                'role="feed"': contarOcorrencias(html, 'role="feed"'),
+                'role="article"': contarOcorrencias(html, 'role="article"'),
+                'Não foi possível': contarOcorrencias(html, 'Não foi possível'),
+                'Parece que você está fazendo muitas pesquisas': contarOcorrencias(
+                  html,
+                  'Parece que você está fazendo muitas pesquisas',
+                ),
+              },
+            };
+
+            console.log(
+              '[DIAG][scraper] resumo do diagnóstico de role=feed:',
+              resumoDiagnosticoRoleFeed,
+            );
+
             await page.screenshot({ path: '/tmp/google-maps-debug.png' });
             await writeFile('/tmp/google-maps-debug.html', html);
 

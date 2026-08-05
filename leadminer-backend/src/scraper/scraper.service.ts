@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { writeFile } from 'fs/promises';
-import { Browser, BrowserContext, Page, chromium } from 'playwright-core';
+import {
+  Browser,
+  BrowserContext,
+  Locator,
+  Page,
+  chromium,
+} from 'playwright-core';
 import chromiumServerless from '@sparticuz/chromium';
 import { LeadsService } from '../leads/leads.service';
 import { SearchHistoryService } from '../search-history/search-history.service';
@@ -25,15 +31,25 @@ const PRECISA_CHROMIUM_EMPACOTADO = Boolean(
 // Se estourar, a empresa é descartada e a pesquisa segue para a próxima.
 const TIMEOUT_POR_EMPRESA_MS = 25000;
 
+// Promise.race() nunca cancela a promise perdedora — ela continua rodando
+// até o fim, sozinha. `aoExpirar` é chamado exatamente quando o timer vence
+// a corrida (nunca em caso de erro normal da própria `promise`), para que o
+// chamador possa reagir de verdade ao timeout: interromper trabalho em
+// andamento (ex.: fechar a Page) e sinalizar a si mesmo para não seguir
+// adiante depois que já foi dado como desistido.
 function withTimeout<T>(
   promise: Promise<T>,
   ms: number,
   mensagemTimeout: string,
+  aoExpirar?: () => void,
 ): Promise<T> {
   let timer: ReturnType<typeof setTimeout>;
 
   const timeoutPromise = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new Error(mensagemTimeout)), ms);
+    timer = setTimeout(() => {
+      aoExpirar?.();
+      reject(new Error(mensagemTimeout));
+    }, ms);
   });
 
   return Promise.race([promise, timeoutPromise]).finally(() =>
@@ -246,11 +262,17 @@ export class ScraperService {
       return null;
     }
 
-    return withTimeout(
-      (async () => {
-        const page = await context.newPage();
+    const page = await context.newPage();
+    // Setado por aoExpirar quando o timeout vence a corrida do
+    // withTimeout() abaixo. A operação abandonada (que continua rodando em
+    // segundo plano — Promise.race não a cancela) consulta essa flag nos
+    // pontos de checagem para parar de avançar em vez de terminar sozinha
+    // depois que start() já contou esta empresa como falha.
+    let expirou = false;
 
-        try {
+    try {
+      return await withTimeout(
+        (async () => {
           // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após identificar onde extrairDetalheDeEmpresa() trava) ====
           console.log('[DIAG][empresa] antes navegarComRetry', result.urlMaps);
           await this.navegarComRetry(page, url, result.nome);
@@ -265,9 +287,12 @@ export class ScraperService {
 
           console.log('[DIAG][empresa] antes extrairDadosEmpresa');
           const companyData = await this.extrairDadosEmpresa(page);
+          if (expirou) return null;
           console.log('[DIAG][empresa] dados extraídos', companyData);
+
           const { isCached, cachedLeadId } =
             await this.consultarCachePorPlaceId(placeId);
+          if (expirou) return null;
 
           // Etapa 3: persiste a empresa e usa o Lead retornado (create ou
           // update por placeId) como resposta — garante id/cidade/categoria/
@@ -285,6 +310,7 @@ export class ScraperService {
             urlMaps: page.url(),
             capturadoEm: new Date(),
           });
+          if (expirou) return null;
           console.log('[DIAG][empresa] lead salvo');
           // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
 
@@ -302,20 +328,29 @@ export class ScraperService {
             isCached,
             cachedLeadId,
           };
-        } finally {
-          try {
-            await page.close();
-          } catch (erroFechamento) {
-            console.error(
-              '[scraper] Erro ao fechar a página de detalhe:',
-              erroFechamento,
-            );
-          }
-        }
-      })(),
-      TIMEOUT_POR_EMPRESA_MS,
-      `Timeout de ${TIMEOUT_POR_EMPRESA_MS / 1000}s ao processar "${result.nome ?? url}"`,
-    );
+        })(),
+        TIMEOUT_POR_EMPRESA_MS,
+        `Timeout de ${TIMEOUT_POR_EMPRESA_MS / 1000}s ao processar "${result.nome ?? url}"`,
+        () => {
+          expirou = true;
+        },
+      );
+    } finally {
+      // Fecha a página assim que a corrida se resolve (sucesso, erro ou
+      // timeout) — não espera a operação abandonada terminar por conta
+      // própria. Isso interrompe de fato qualquer chamada Playwright em
+      // andamento nela (navegarComRetry/waitForSelector/extrairDadosEmpresa
+      // passam a rejeitar com a página fechada), em vez de deixá-la seguir
+      // rodando sozinha até o fim.
+      try {
+        await page.close();
+      } catch (erroFechamento) {
+        console.error(
+          '[scraper] Erro ao fechar a página de detalhe:',
+          erroFechamento,
+        );
+      }
+    }
   }
 
   // Item 3: em erro de navegação, tenta mais uma vez; se falhar de novo,
@@ -576,6 +611,94 @@ export class ScraperService {
   }
   // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
 
+  // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após confirmar/eliminar a hipótese do autocomplete) ====
+  // Investiga se o Google Maps tem uma sugestão de autocomplete
+  // pré-destacada no instante exato antes do Enter — se houver, o Enter
+  // pode estar aceitando essa sugestão em vez de fazer a busca textual
+  // literal do campo, o que explicaria o redirecionamento direto para
+  // /maps/place/. Só lê o estado atual do DOM/input — nunca clica, nunca
+  // digita, nunca altera nada. Nunca lança: qualquer falha na própria
+  // captura só é logada, sem afetar o fluxo de busca.
+  private async capturarDiagnosticoAutocomplete(
+    page: Page,
+    searchInput: Locator,
+  ): Promise<void> {
+    try {
+      const inputValue = await searchInput.inputValue();
+
+      const estadoDom = await page.evaluate(() => {
+        const input = document.querySelector('input[name="q"]');
+
+        const aria = input
+          ? {
+              ariaExpanded: input.getAttribute('aria-expanded'),
+              ariaActivedescendant: input.getAttribute('aria-activedescendant'),
+              ariaControls: input.getAttribute('aria-controls'),
+              role: input.getAttribute('role'),
+            }
+          : null;
+
+        const candidatos = Array.from(
+          document.querySelectorAll('[role="option"], [aria-selected]'),
+        );
+
+        const suggestions = candidatos.map((el) => ({
+          texto: el.textContent?.trim().slice(0, 200) ?? null,
+          id: el.getAttribute('id'),
+          role: el.getAttribute('role'),
+          ariaSelected: el.getAttribute('aria-selected'),
+          tag: el.tagName,
+        }));
+
+        const activeDescendantId =
+          input?.getAttribute('aria-activedescendant') ?? null;
+        const activeDescendantEl = activeDescendantId
+          ? document.getElementById(activeDescendantId)
+          : null;
+
+        const activeItem = activeDescendantEl
+          ? {
+              origem: 'aria-activedescendant',
+              id: activeDescendantEl.getAttribute('id'),
+              texto:
+                activeDescendantEl.textContent?.trim().slice(0, 200) ?? null,
+            }
+          : (suggestions.find((s) => s.ariaSelected === 'true') ?? null);
+
+        const listbox = document.querySelector('[role="listbox"]');
+
+        return {
+          aria,
+          suggestions,
+          activeItem,
+          dropdown: {
+            listboxPresente: Boolean(listbox),
+            outerHtmlTrecho: listbox?.outerHTML.slice(0, 1000) ?? null,
+          },
+        };
+      });
+
+      const screenshotPath = '/tmp/autocomplete-before-enter.png';
+      await page.screenshot({ path: screenshotPath });
+
+      console.log('[AUTOCOMPLETE DEBUG] input:', inputValue);
+      console.log('[AUTOCOMPLETE DEBUG] aria:', estadoDom.aria);
+      console.log('[AUTOCOMPLETE DEBUG] suggestions:', {
+        total: estadoDom.suggestions.length,
+        itens: estadoDom.suggestions,
+      });
+      console.log('[AUTOCOMPLETE DEBUG] active item:', estadoDom.activeItem);
+      console.log('[AUTOCOMPLETE DEBUG] dropdown dom:', estadoDom.dropdown);
+      console.log('[AUTOCOMPLETE DEBUG] screenshot:', screenshotPath);
+    } catch (erroDiagnosticoAutocomplete) {
+      console.error(
+        '[AUTOCOMPLETE DEBUG] Falha ao capturar diagnóstico de autocomplete:',
+        erroDiagnosticoAutocomplete,
+      );
+    }
+  }
+  // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
+
   // Portado de src/scraper/maps.ts — busca e coleta a lista de empresas
   // usando uma Page própria, criada e fechada inteiramente dentro desta
   // função (no finally, sucesso ou falha). Nunca devolve a Page para quem
@@ -618,12 +741,28 @@ export class ScraperService {
 
       await searchInput.fill(termoBusca);
       await page.waitForTimeout(2000);
-      await searchInput.press('Enter');
+
+      await this.capturarDiagnosticoAutocomplete(page, searchInput);
+
+      // Investigação prévia (10x Enter vs 10x clique real) mostrou que
+      // searchInput.press('Enter') pode aceitar uma sugestão de autocomplete
+      // pré-destacada e pular direto para /maps/place/ (1/10 execuções),
+      // enquanto o clique no botão real de pesquisa da omnibox não
+      // apresentou esse comportamento em 10/10 execuções. Fallback para
+      // Enter cobre o caso do botão não estar disponível no DOM.
+      const botaoPesquisa = page.locator('button[aria-label="Pesquisar"]');
+      try {
+        await botaoPesquisa.waitFor({ state: 'visible', timeout: 5000 });
+        await botaoPesquisa.click();
+      } catch {
+        await searchInput.press('Enter');
+      }
 
       console.log('[scraper] Busca enviada via interface:', termoBusca);
 
-      // Mesmo com a busca sendo enviada pela interface (fill + Enter), o
-      // Google Maps ainda pode navegar para um de dois destinos possíveis, e
+      // Mesmo com a busca sendo enviada pela interface (clique no botão de
+      // pesquisa, com fallback para Enter), o Google Maps ainda pode navegar
+      // para um de dois destinos possíveis, e
       // essa decisão pode acontecer de forma assíncrona depois do evento
       // "load" — por isso continuamos usando polling de page.url() (em vez de
       // assumir que a URL já estabilizou assim que "load" dispara) por até

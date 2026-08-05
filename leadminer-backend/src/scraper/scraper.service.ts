@@ -445,18 +445,21 @@ export class ScraperService {
 
     console.log('[scraper] URL após busca direta:', page.url());
 
-    // Mesmo navegando direto para /maps/search/<query>, o Google Maps ainda
-    // pode redirecionar client-side para um de dois destinos possíveis:
-    // - /maps/search/... permanece (múltiplos resultados, fluxo de lista normal);
-    // - /maps/place/... quando a busca é específica o bastante para casar com
-    //   uma única empresa (o Google pula a lista e vai direto ao detalhe).
-    // Sem catch silencioso: se nenhum dos dois ocorrer (ex.: bloqueio/
-    // consentimento), a exceção propaga normalmente e é logada pelo catch de
-    // diagnóstico em start() — não é mais contado como zero resultados.
-    await page.waitForURL(/\/maps\/(search|place)\//);
+    // waitForURL(/\/maps\/(search|place)\//) não serve mais como validação
+    // aqui: como urlBusca já É uma URL /maps/search/<query>, esse padrão já
+    // está satisfeito desde o primeiro instante — antes da SPA do Google Maps
+    // decidir, de forma assíncrona (depois do domcontentloaded), se redireciona
+    // para /maps/place/. Isso fazia a leitura de page.url() acontecer cedo
+    // demais, antes do redirecionamento real acontecer.
+    //
+    // Em vez disso: esperamos a navegação terminar (load) e damos um pequeno
+    // período para a SPA processar um eventual redirecionamento client-side
+    // antes de capturar page.url() de novo e só então decidir o branch.
+    await page.waitForLoadState('load');
+    await page.waitForTimeout(3000);
 
     const urlAposBusca = page.url();
-    console.log('[scraper] URL após busca:', urlAposBusca);
+    console.log('[scraper] URL após busca (estabilizada):', urlAposBusca);
 
     let results: CardResultado[];
 

@@ -431,25 +431,23 @@ export class ScraperService {
       return route.continue();
     });
 
-    console.log('[DIAG][scraper] navegação para Google Maps - antes de page.goto()');
-    await page.goto('https://maps.google.com');
-    console.log('[DIAG][scraper] navegação para Google Maps - depois de page.goto(), sucesso');
-    await page.waitForTimeout(5000);
+    // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA (as etapas abaixo já são lógica real de navegação/tratamento search/place, não diagnóstico) ====
 
-    const searchInput = page.locator('input[name="q"]');
+    // Navegação direta para a URL de busca do Google Maps — elimina a
+    // dependência do campo input[name="q"] da homepage (seletor sujeito a
+    // mudança de DOM) e do fluxo fill()/press('Enter').
+    const urlBusca = `https://www.google.com/maps/search/${encodeURIComponent(termoBusca)}`;
 
-    console.log('[DIAG][scraper] preenchimento da pesquisa - antes de fill()/press("Enter")', {
-      termoBusca,
+    await page.goto(urlBusca, {
+      waitUntil: 'domcontentloaded',
+      timeout: 60000,
     });
-    await searchInput.fill(termoBusca);
-    await page.waitForTimeout(2000);
-    await searchInput.press('Enter');
-    console.log('[DIAG][scraper] preenchimento da pesquisa - depois de fill()/press("Enter"), sucesso');
 
-    // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA (as etapas abaixo já são lógica real de tratamento search/place, não diagnóstico) ====
+    console.log('[scraper] URL após busca direta:', page.url());
 
-    // Depois do Enter, o Google Maps navega para um de dois destinos possíveis:
-    // - /maps/search/... quando há múltiplos resultados (fluxo de lista normal);
+    // Mesmo navegando direto para /maps/search/<query>, o Google Maps ainda
+    // pode redirecionar client-side para um de dois destinos possíveis:
+    // - /maps/search/... permanece (múltiplos resultados, fluxo de lista normal);
     // - /maps/place/... quando a busca é específica o bastante para casar com
     //   uma única empresa (o Google pula a lista e vai direto ao detalhe).
     // Sem catch silencioso: se nenhum dos dois ocorrer (ex.: bloqueio/

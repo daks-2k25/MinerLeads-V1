@@ -10,6 +10,10 @@ import { ScrapedLead } from './interfaces/scraped-lead.interface';
 interface CardResultado {
   nome: string | null;
   urlMaps: string | null;
+  // true quando a página do browser já está aberta em urlMaps (caso
+  // /maps/place/, onde o Google já navegou direto ao detalhe) — evita que
+  // processarEmpresa() renavegue para a mesma URL.
+  paginaJaCarregada?: boolean;
 }
 
 // Ambientes onde não há um Chromium do Playwright instalado no sistema —
@@ -194,7 +198,13 @@ export class ScraperService {
       (async () => {
         // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após identificar onde processarEmpresa() trava no fluxo /maps/place/) ====
         console.log('[DIAG][empresa] antes navegarComRetry', result.urlMaps);
-        await this.navegarComRetry(page, url, result.nome);
+        if (result.paginaJaCarregada) {
+          console.log(
+            '[DIAG][empresa] página já carregada (resultado único de /maps/place/), pulando navegarComRetry',
+          );
+        } else {
+          await this.navegarComRetry(page, url, result.nome);
+        }
         console.log('[DIAG][empresa] depois navegarComRetry');
 
         try {
@@ -458,7 +468,7 @@ export class ScraperService {
         urlAposBusca,
       );
 
-      results = [{ nome: null, urlMaps: urlAposBusca }];
+      results = [{ nome: null, urlMaps: urlAposBusca, paginaJaCarregada: true }];
     } else {
       await page.waitForLoadState('load');
       await page.waitForTimeout(5000);

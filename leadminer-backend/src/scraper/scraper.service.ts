@@ -38,8 +38,11 @@ const TIMEOUT_POR_EMPRESA_MS = 45000;
 // sequencial (uma empresa por vez), o que multiplicava o tempo total pelo
 // número de empresas. Limite de concorrência controlado — nunca abre mais
 // páginas simultâneas do que isso no mesmo BrowserContext, para não
-// sobrecarregar o Chromium empacotado do Render.
-const CONCORRENCIA_MAXIMA_PROCESSAMENTO_EMPRESAS = 3;
+// sobrecarregar o Chromium empacotado do Render. Reduzido de 3 para 2: no
+// Render o Chromium tem menos recursos disponíveis — 2 páginas simultâneas
+// ainda trazem ganho de velocidade sobre o processamento sequencial, com
+// menor consumo de memória.
+const CONCORRENCIA_MAXIMA_PROCESSAMENTO_EMPRESAS = 2;
 
 // Scroll da lista de resultados (buscarListaDeEmpresas): a auditoria
 // mostrou que o Google Maps entrega os resultados por scroll infinito (sem
@@ -50,7 +53,11 @@ const CONCORRENCIA_MAXIMA_PROCESSAMENTO_EMPRESAS = 3;
 const SCROLL_LIMITE_MAXIMO_RESULTADOS = 100;
 const SCROLL_MAX_TENTATIVAS_SEM_CRESCIMENTO = 3;
 const SCROLL_TIMEOUT_MS = 60000;
-const SCROLL_INTERVALO_ENTRE_RODADAS_MS = 2000;
+// Aumentado de 2000 para 4000: o Render tem mais latência até o Google
+// Maps que o ambiente local, então o scraper podia encerrar cedo demais
+// (condição de "sem crescimento") antes dos novos cards terminarem de
+// carregar.
+const SCROLL_INTERVALO_ENTRE_RODADAS_MS = 4000;
 
 // Promise.race() nunca cancela a promise perdedora — ela continua rodando
 // até o fim, sozinha. `aoExpirar` é chamado exatamente quando o timer vence

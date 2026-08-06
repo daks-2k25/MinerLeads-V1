@@ -837,6 +837,112 @@ export class ScraperService {
   }
   // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
 
+  // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após entender por que o Google Maps às vezes resolve direto para /maps/place/ no Render) ====
+  // Investiga o contexto inicial (idioma, timezone, geolocalização,
+  // user-agent, coordenadas na URL etc.) que o Google Maps recebe assim que
+  // a página abre no Render, antes de qualquer interação (fill/click/Enter).
+  // Hipótese em investigação: esse contexto pode influenciar a decisão do
+  // Google de resolver a busca direto para /maps/place/ em vez de
+  // /maps/search/. Só lê o estado atual — nunca altera BrowserContext,
+  // geolocation, locale, timezone, user-agent nem a lógica de busca. Nunca
+  // lança: qualquer falha na própria captura só é logada, sem afetar o
+  // fluxo de busca.
+  private async capturarDiagnosticoContextoInicial(
+    page: Page,
+    urlImediatamenteAposAbrir: string,
+  ): Promise<void> {
+    try {
+      console.log(
+        '[DIAG][contexto-inicial] URL imediatamente após abrir a página:',
+        urlImediatamenteAposAbrir,
+      );
+
+      try {
+        await page.waitForLoadState('load', { timeout: 10000 });
+      } catch (erroWaitLoad) {
+        console.warn(
+          '[DIAG][contexto-inicial] waitForLoadState("load") não completou a tempo (best-effort, seguindo mesmo assim):',
+          erroWaitLoad instanceof Error ? erroWaitLoad.message : erroWaitLoad,
+        );
+      }
+
+      const urlAposCarregamentoCompleto = page.url();
+      const titulo = await page.title();
+
+      const infoNavegador = await page.evaluate(() => {
+        let timeZone: string | null = null;
+        try {
+          timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        } catch {
+          timeZone = null;
+        }
+
+        return {
+          navigatorLanguage: navigator.language,
+          navigatorLanguages: navigator.languages
+            ? Array.from(navigator.languages)
+            : null,
+          timeZone,
+          navigatorPlatform: navigator.platform,
+          navigatorUserAgent: navigator.userAgent,
+          documentLang: document.documentElement.lang || null,
+          geolocationDisponivel: 'geolocation' in navigator,
+        };
+      });
+
+      const matchCoordenadas = urlAposCarregamentoCompleto.match(
+        /@(-?\d+\.\d+),(-?\d+\.\d+)/,
+      );
+      const coordenadasNaUrl = matchCoordenadas
+        ? { lat: Number(matchCoordenadas[1]), lng: Number(matchCoordenadas[2]) }
+        : null;
+
+      console.log(
+        '[DIAG][contexto-inicial] URL após o carregamento completo:',
+        urlAposCarregamentoCompleto,
+      );
+      console.log('[DIAG][contexto-inicial] título da página:', titulo);
+      console.log(
+        '[DIAG][contexto-inicial] navigator.language:',
+        infoNavegador.navigatorLanguage,
+      );
+      console.log(
+        '[DIAG][contexto-inicial] navigator.languages:',
+        infoNavegador.navigatorLanguages,
+      );
+      console.log(
+        '[DIAG][contexto-inicial] Intl.DateTimeFormat().resolvedOptions().timeZone:',
+        infoNavegador.timeZone,
+      );
+      console.log(
+        '[DIAG][contexto-inicial] navigator.platform:',
+        infoNavegador.navigatorPlatform,
+      );
+      console.log(
+        '[DIAG][contexto-inicial] navigator.userAgent:',
+        infoNavegador.navigatorUserAgent,
+      );
+      console.log(
+        '[DIAG][contexto-inicial] document.documentElement.lang:',
+        infoNavegador.documentLang,
+      );
+      console.log(
+        '[DIAG][contexto-inicial] navigator.geolocation disponível:',
+        infoNavegador.geolocationDisponivel,
+      );
+      console.log(
+        '[DIAG][contexto-inicial] coordenadas encontradas na URL (@lat,long):',
+        coordenadasNaUrl,
+      );
+    } catch (erroDiagnosticoContexto) {
+      console.error(
+        '[DIAG][contexto-inicial] Falha ao capturar diagnóstico de contexto inicial:',
+        erroDiagnosticoContexto,
+      );
+    }
+  }
+  // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
+
   // Portado de src/scraper/maps.ts — busca e coleta a lista de empresas
   // usando uma Page própria, criada e fechada inteiramente dentro desta
   // função (no finally, sucesso ou falha). Nunca devolve a Page para quem
@@ -873,6 +979,9 @@ export class ScraperService {
         waitUntil: 'domcontentloaded',
         timeout: 60000,
       });
+
+      await this.capturarDiagnosticoContextoInicial(page, page.url());
+
       await page.waitForTimeout(5000);
 
       const searchInput = page.locator('input[name="q"]');

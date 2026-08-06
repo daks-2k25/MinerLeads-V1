@@ -57,6 +57,35 @@ function withTimeout<T>(
   );
 }
 
+// Mapeamento explícito e pontual de termos de categoria no singular para o
+// plural. Investigação empírica (35 buscas reais) mostrou que o Google Maps
+// resolve termos de categoria no singular como busca por uma empresa
+// específica — ex.: "clinica de estetica batel curitiba" bate quase
+// literalmente com o nome de um negócio real e redirecionou direto para
+// /maps/place/ em 4/4 tentativas — enquanto o plural do mesmo termo foi
+// tratado como busca por categoria e retornou a lista normalmente em 4/4
+// tentativas. Não é uma correção geral do redirecionamento: cobre só os
+// termos abaixo; qualquer palavra fora deste mapeamento passa inalterada.
+const MAPEAMENTO_SINGULAR_PARA_PLURAL: Record<string, string> = {
+  clinica: 'clinicas',
+  clínica: 'clínicas',
+  salao: 'saloes',
+  salão: 'salões',
+  consultorio: 'consultorios',
+  consultório: 'consultórios',
+};
+
+// Função isolada e pura (sem dependência de estado da classe): troca, palavra
+// por palavra, os termos presentes em MAPEAMENTO_SINGULAR_PARA_PLURAL pelo
+// plural correspondente (comparação case-insensitive). Palavras fora do
+// mapeamento são devolvidas exatamente como vieram.
+function normalizarTermoBusca(termoBusca: string): string {
+  return termoBusca
+    .split(' ')
+    .map((palavra) => MAPEAMENTO_SINGULAR_PARA_PLURAL[palavra.toLowerCase()] ?? palavra)
+    .join(' ');
+}
+
 @Injectable()
 export class ScraperService {
   // Portado de src/scraper/service.ts (projeto antigo) — lock de concorrência
@@ -967,6 +996,13 @@ export class ScraperService {
     context: BrowserContext,
     termoBusca: string,
   ): Promise<CardResultado[]> {
+    const termoNormalizado = normalizarTermoBusca(termoBusca);
+    console.log('[DIAG][normalizacao-termo] termo original:', termoBusca);
+    console.log(
+      '[DIAG][normalizacao-termo] termo normalizado:',
+      termoNormalizado,
+    );
+
     console.log(
       '[DIAG][scraper] criação da página de busca - antes de context.newPage()',
     );
@@ -1001,7 +1037,11 @@ export class ScraperService {
 
       const searchInput = page.locator('input[name="q"]');
 
-      await searchInput.fill(termoBusca);
+      console.log(
+        '[DIAG][normalizacao-termo] busca final enviada ao Google Maps:',
+        termoNormalizado,
+      );
+      await searchInput.fill(termoNormalizado);
       await page.waitForTimeout(2000);
 
       await this.capturarDiagnosticoAutocomplete(page, searchInput);

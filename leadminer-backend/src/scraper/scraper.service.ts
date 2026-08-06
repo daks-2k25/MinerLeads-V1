@@ -118,7 +118,22 @@ export class ScraperService {
         // usado em produção) pode se considerar ocioso e finalizar sozinho —
         // causando "Target page, context or browser has been closed" na
         // próxima chamada de newPage().
-        const context = await browser.newContext();
+        // ==== ALTERAÇÃO TEMPORÁRIA DE TESTE (remover após validar a hipótese do contexto internacional do Chromium no Render — NÃO é a correção definitiva) ====
+        // Testa se forçar locale/timezone/geolocation/Accept-Language para
+        // Brasil muda a resolução regional do Google Maps no Render (hoje
+        // resolve em en-US/UTC, com botão "Search" em vez de "Pesquisar", e
+        // ocasionalmente cai direto em /maps/place/). Geolocation aponta
+        // para Curitiba/Batel — mesma região usada nas buscas de teste.
+        const context = await browser.newContext({
+          locale: 'pt-BR',
+          timezoneId: 'America/Sao_Paulo',
+          geolocation: { latitude: -25.4411, longitude: -49.276 },
+          permissions: ['geolocation'],
+          extraHTTPHeaders: {
+            'Accept-Language': 'pt-BR',
+          },
+        });
+        // ==== FIM DA ALTERAÇÃO TEMPORÁRIA DE TESTE ====
 
         try {
           // buscarListaDeEmpresas() abre e fecha sua própria Page — se ela

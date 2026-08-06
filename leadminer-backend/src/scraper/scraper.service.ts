@@ -29,7 +29,17 @@ const PRECISA_CHROMIUM_EMPACOTADO = Boolean(
 
 // Etapa de resiliência: orçamento máximo por empresa (navegação + extração).
 // Se estourar, a empresa é descartada e a pesquisa segue para a próxima.
-const TIMEOUT_POR_EMPRESA_MS = 25000;
+// Ajustado de 25s para 45s: o valor anterior gerava muitos falsos negativos
+// ("Timeout de 25s ao processar empresa") no Render, ambiente mais lento
+// que o local.
+const TIMEOUT_POR_EMPRESA_MS = 45000;
+
+// Processamento dos detalhes de cada empresa encontrada (start()): antes
+// sequencial (uma empresa por vez), o que multiplicava o tempo total pelo
+// número de empresas. Limite de concorrência controlado — nunca abre mais
+// páginas simultâneas do que isso no mesmo BrowserContext, para não
+// sobrecarregar o Chromium empacotado do Render.
+const CONCORRENCIA_MAXIMA_PROCESSAMENTO_EMPRESAS = 3;
 
 // Scroll da lista de resultados (buscarListaDeEmpresas): a auditoria
 // mostrou que o Google Maps entrega os resultados por scroll infinito (sem
@@ -95,6 +105,43 @@ function normalizarTermoBusca(termoBusca: string): string {
     .split(' ')
     .map((palavra) => MAPEAMENTO_SINGULAR_PARA_PLURAL[palavra.toLowerCase()] ?? palavra)
     .join(' ');
+}
+
+// Função isolada e pura (sem dependência de estado da classe): processa
+// `itens` chamando `processar` com no máximo `limiteConcorrencia` chamadas
+// em andamento ao mesmo tempo — nunca ilimitado. Implementada como um
+// pequeno worker pool: cada worker consome o próximo índice disponível de
+// um cursor compartilhado (seguro em JS/Node por ser single-threaded, sem
+// race condition) até a lista acabar. Erros de um item não derrubam os
+// demais: `processar` é responsável por tratar seus próprios erros e
+// retornar `null` nesse caso — só valores não nulos entram no resultado
+// final.
+async function processarComConcorrenciaLimitada<T, R>(
+  itens: T[],
+  limiteConcorrencia: number,
+  processar: (item: T, indice: number) => Promise<R | null>,
+): Promise<R[]> {
+  const resultados: R[] = [];
+  let proximoIndice = 0;
+
+  async function worker(): Promise<void> {
+    while (proximoIndice < itens.length) {
+      const indiceAtual = proximoIndice;
+      proximoIndice += 1;
+
+      const resultado = await processar(itens[indiceAtual], indiceAtual);
+      if (resultado) resultados.push(resultado);
+    }
+  }
+
+  const workers = Array.from(
+    { length: Math.min(limiteConcorrencia, itens.length) },
+    () => worker(),
+  );
+
+  await Promise.all(workers);
+
+  return resultados;
 }
 
 @Injectable()
@@ -193,36 +240,76 @@ export class ScraperService {
           );
           const tempoListaMs = Date.now() - inicioTotal;
 
-          const empresas: ScrapedLead[] = [];
           const inicioDetalhes = Date.now();
 
           console.log('[DIAG][scraper] início do processamento das empresas', {
             totalEmpresas: results.length,
           });
-          for (const result of results) {
-            if (!result.urlMaps) continue;
+          console.log(
+            '[inicio-processamento-paralelo] quantidade total de empresas:',
+            results.length,
+          );
 
-            try {
-              // extrairDetalheDeEmpresa() abre e fecha sua própria Page de
-              // detalhe — nunca reaproveita a Page usada na busca/listagem.
-              const empresa = await this.extrairDetalheDeEmpresa(
-                context,
-                result,
-                dto,
-              );
-              if (empresa) empresas.push(empresa);
-            } catch (erro) {
-              console.error(
-                `[scraper] Falha ao processar empresa "${result.nome ?? result.urlMaps}", ignorando e seguindo para a próxima:`,
-                erro instanceof Error ? erro.message : erro,
-              );
-            }
-          }
+          const empresas = await processarComConcorrenciaLimitada<
+            CardResultado,
+            ScrapedLead
+          >(
+            results,
+            CONCORRENCIA_MAXIMA_PROCESSAMENTO_EMPRESAS,
+            async (result) => {
+              if (!result.urlMaps) return null;
+
+              const nomeEmpresa = result.nome ?? result.urlMaps;
+              const inicioEmpresa = Date.now();
+              console.log('[empresa-iniciada] nome:', nomeEmpresa);
+
+              try {
+                // extrairDetalheDeEmpresa() abre e fecha sua própria Page de
+                // detalhe — nunca reaproveita a Page usada na busca/listagem.
+                const empresa = await this.extrairDetalheDeEmpresa(
+                  context,
+                  result,
+                  dto,
+                );
+
+                console.log(
+                  '[empresa-finalizada] nome:',
+                  nomeEmpresa,
+                  'tempoGastoMs:',
+                  Date.now() - inicioEmpresa,
+                );
+
+                return empresa;
+              } catch (erro) {
+                console.error(
+                  `[scraper] Falha ao processar empresa "${nomeEmpresa}", ignorando e seguindo para a próxima:`,
+                  erro instanceof Error ? erro.message : erro,
+                );
+                console.log(
+                  '[empresa-finalizada] nome:',
+                  nomeEmpresa,
+                  'tempoGastoMs:',
+                  Date.now() - inicioEmpresa,
+                  '(com erro)',
+                );
+
+                return null;
+              }
+            },
+          );
+
           console.log('[DIAG][scraper] fim do processamento das empresas', {
             processadas: empresas.length,
           });
 
           const tempoDetalhesMs = Date.now() - inicioDetalhes;
+
+          console.log('[resumo-processamento] empresas encontradas:', results.length);
+          console.log('[resumo-processamento] empresas processadas:', empresas.length);
+          console.log(
+            '[resumo-processamento] tempo total de detalhes (ms):',
+            tempoDetalhesMs,
+          );
           const tempoTotalMs = Date.now() - inicioTotal;
           const cache = empresas.filter((e) => e.isCached).length;
           const novos = empresas.filter((e) => !e.isCached).length;

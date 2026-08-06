@@ -699,6 +699,144 @@ export class ScraperService {
   }
   // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
 
+  // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após identificar por que button[aria-label="Pesquisar"] não é encontrado no Render) ====
+  // Em produção (Render) o fallback para Enter foi acionado, indicando que
+  // button[aria-label="Pesquisar"] não foi localizado a tempo nesse
+  // ambiente. Antes de mexer na lógica do clique/fallback, lista todos os
+  // <button> visíveis no DOM nesse momento e verifica explicitamente a
+  // presença do seletor usado, para descobrir se o botão não existe, existe
+  // com outro aria-label, ou só ainda não estava visível. Só lê o estado
+  // atual — nunca clica, nunca digita. Nunca lança: qualquer falha na
+  // própria captura só é logada, sem afetar o fluxo de busca.
+  private async capturarDiagnosticoBotaoPesquisa(page: Page): Promise<void> {
+    try {
+      const diagnostico = await page.evaluate(() => {
+        function estaVisivel(el: Element): boolean {
+          const rect = el.getBoundingClientRect();
+          const style = window.getComputedStyle(el);
+          return (
+            rect.width > 0 &&
+            rect.height > 0 &&
+            style.visibility !== 'hidden' &&
+            style.display !== 'none' &&
+            (el as HTMLElement).offsetParent !== null
+          );
+        }
+
+        function estaHabilitado(el: Element): boolean {
+          const desabilitadoPorAtributo = el.hasAttribute('disabled');
+          const ariaDisabled = el.getAttribute('aria-disabled');
+          return !desabilitadoPorAtributo && ariaDisabled !== 'true';
+        }
+
+        function boundingBoxDe(el: Element) {
+          const rect = el.getBoundingClientRect();
+          return {
+            x: rect.x,
+            y: rect.y,
+            width: rect.width,
+            height: rect.height,
+          };
+        }
+
+        function descreverCandidato(el: Element, origem: string) {
+          return {
+            origem,
+            tag: el.tagName,
+            ariaLabel: el.getAttribute('aria-label'),
+            texto: el.textContent?.trim().slice(0, 100) || null,
+            classe: (el as HTMLElement).className || null,
+            jsaction: el.getAttribute('jsaction'),
+            visivel: estaVisivel(el),
+            habilitado: estaHabilitado(el),
+            boundingBox: boundingBoxDe(el),
+          };
+        }
+
+        const botoesVisiveis = Array.from(document.querySelectorAll('button'))
+          .filter(estaVisivel)
+          .map((el) => ({
+            ariaLabel: el.getAttribute('aria-label'),
+            texto: el.textContent?.trim().slice(0, 100) || null,
+            classe: el.className || null,
+          }));
+
+        const candidatosPesquisar = Array.from(
+          document.querySelectorAll('button[aria-label="Pesquisar"]'),
+        );
+        const candidatosSearch = Array.from(
+          document.querySelectorAll('button[aria-label="Search"]'),
+        );
+        const candidatosJsaction = Array.from(
+          document.querySelectorAll('[jsaction]'),
+        ).filter((el) =>
+          (el.getAttribute('jsaction') ?? '').includes('omnibox.search'),
+        );
+
+        const candidatos = [
+          ...candidatosPesquisar.map((el) =>
+            descreverCandidato(el, 'button[aria-label="Pesquisar"]'),
+          ),
+          ...candidatosSearch.map((el) =>
+            descreverCandidato(el, 'button[aria-label="Search"]'),
+          ),
+          ...candidatosJsaction.map((el) =>
+            descreverCandidato(el, 'jsaction contém "omnibox.search"'),
+          ),
+        ];
+
+        return {
+          botoesVisiveis,
+          contagem: {
+            ariaLabelPesquisar: candidatosPesquisar.length,
+            ariaLabelSearch: candidatosSearch.length,
+            jsactionOmniboxSearch: candidatosJsaction.length,
+          },
+          candidatos,
+        };
+      });
+
+      const labelsDisponiveis = diagnostico.botoesVisiveis
+        .map((botao) => botao.ariaLabel)
+        .filter((label): label is string => Boolean(label));
+
+      console.log(
+        '[DIAG][botao-pesquisa] total de botões visíveis:',
+        diagnostico.botoesVisiveis.length,
+      );
+      console.log(
+        '[DIAG][botao-pesquisa] botões visíveis:',
+        diagnostico.botoesVisiveis,
+      );
+      console.log(
+        '[DIAG][botao-pesquisa] labels (aria-label) disponíveis:',
+        labelsDisponiveis,
+      );
+      console.log(
+        '[DIAG][botao-pesquisa] quantidade de button[aria-label="Pesquisar"] encontrados:',
+        diagnostico.contagem.ariaLabelPesquisar,
+      );
+      console.log(
+        '[DIAG][botao-pesquisa] quantidade de button[aria-label="Search"] encontrados:',
+        diagnostico.contagem.ariaLabelSearch,
+      );
+      console.log(
+        '[DIAG][botao-pesquisa] quantidade de elementos com jsaction contendo "omnibox.search":',
+        diagnostico.contagem.jsactionOmniboxSearch,
+      );
+      console.log(
+        '[DIAG][botao-pesquisa] detalhes dos candidatos encontrados (visível/habilitado/boundingBox):',
+        diagnostico.candidatos,
+      );
+    } catch (erroDiagnosticoBotao) {
+      console.error(
+        '[DIAG][botao-pesquisa] Falha ao capturar diagnóstico do botão de pesquisa:',
+        erroDiagnosticoBotao,
+      );
+    }
+  }
+  // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
+
   // Portado de src/scraper/maps.ts — busca e coleta a lista de empresas
   // usando uma Page própria, criada e fechada inteiramente dentro desta
   // função (no finally, sucesso ou falha). Nunca devolve a Page para quem
@@ -750,6 +888,8 @@ export class ScraperService {
       // enquanto o clique no botão real de pesquisa da omnibox não
       // apresentou esse comportamento em 10/10 execuções. Fallback para
       // Enter cobre o caso do botão não estar disponível no DOM.
+      await this.capturarDiagnosticoBotaoPesquisa(page);
+
       const botaoPesquisa = page.locator('button[aria-label="Pesquisar"]');
       try {
         await botaoPesquisa.waitFor({ state: 'visible', timeout: 5000 });

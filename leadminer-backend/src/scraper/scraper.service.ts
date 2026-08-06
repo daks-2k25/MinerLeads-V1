@@ -31,6 +31,17 @@ const PRECISA_CHROMIUM_EMPACOTADO = Boolean(
 // Se estourar, a empresa é descartada e a pesquisa segue para a próxima.
 const TIMEOUT_POR_EMPRESA_MS = 25000;
 
+// Scroll da lista de resultados (buscarListaDeEmpresas): a auditoria
+// mostrou que o Google Maps entrega os resultados por scroll infinito (sem
+// botão de paginação) e que um loop fixo de 5 rolagens parava a coleta bem
+// antes do feed esgotar (a lista continuava crescendo). Os limites abaixo
+// substituem o loop fixo por uma condição de parada baseada no crescimento
+// real da lista.
+const SCROLL_LIMITE_MAXIMO_RESULTADOS = 100;
+const SCROLL_MAX_TENTATIVAS_SEM_CRESCIMENTO = 3;
+const SCROLL_TIMEOUT_MS = 60000;
+const SCROLL_INTERVALO_ENTRE_RODADAS_MS = 2000;
+
 // Promise.race() nunca cancela a promise perdedora — ela continua rodando
 // até o fim, sozinha. `aoExpirar` é chamado exatamente quando o timer vence
 // a corrida (nunca em caso de erro normal da própria `promise`), para que o
@@ -574,6 +585,94 @@ export class ScraperService {
 
     return page.url();
   }
+
+  // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após entender por que a lista retorna poucos resultados, ex.: 6) ====
+  // Mede, em cada rodada de coleta/scroll, como o Google Maps está
+  // entregando os resultados: presença de role="feed", quantidade de
+  // role="article", textos/URLs dos primeiros 10, se há scroll disponível
+  // (scrollHeight vs clientHeight/scrollTop) e se existe algum indicador de
+  // "carregar mais"/spinner de loading dentro do feed. Só lê o estado
+  // atual — nunca altera a lógica real de coleta/scroll (coletarResultados,
+  // o loop de 5 iterações, o dedup por URL). Nunca lança: qualquer falha na
+  // própria captura só é logada, sem afetar o fluxo de busca.
+  private async capturarDiagnosticoListaResultados(
+    page: Page,
+    etiqueta: string,
+  ): Promise<void> {
+    try {
+      const diagnostico = await page.evaluate(() => {
+        const feed = document.querySelector('[role="feed"]');
+        const articles = Array.from(document.querySelectorAll('[role="article"]'));
+
+        const primeiros10 = articles.slice(0, 10).map((article) => {
+          const link = article.querySelector('a');
+          return {
+            texto: link?.getAttribute('aria-label') ?? null,
+            url: link?.getAttribute('href') ?? null,
+          };
+        });
+
+        const scrollInfo = feed
+          ? {
+              scrollTop: feed.scrollTop,
+              scrollHeight: feed.scrollHeight,
+              clientHeight: feed.clientHeight,
+              temMaisParaRolar:
+                feed.scrollHeight > feed.clientHeight + feed.scrollTop + 5,
+            }
+          : null;
+
+        // Heurística ampla, só pra diagnóstico: procura qualquer indicador
+        // textual de carregamento/paginação dentro do feed.
+        const indicadorCarregamento = feed
+          ? Array.from(feed.querySelectorAll('*')).some((el) => {
+              const texto = (el.textContent || '').toLowerCase();
+              return (
+                texto.includes('carregando') ||
+                texto.includes('mais resultados') ||
+                texto.includes('carregar mais') ||
+                el.getAttribute('role') === 'progressbar'
+              );
+            })
+          : false;
+
+        return {
+          feedPresente: Boolean(feed),
+          totalArticles: articles.length,
+          primeiros10,
+          scrollInfo,
+          indicadorCarregamento,
+        };
+      });
+
+      console.log(
+        `[DIAG][lista-resultados][${etiqueta}] role="feed" presente:`,
+        diagnostico.feedPresente,
+      );
+      console.log(
+        `[DIAG][lista-resultados][${etiqueta}] quantidade de role="article":`,
+        diagnostico.totalArticles,
+      );
+      console.log(
+        `[DIAG][lista-resultados][${etiqueta}] primeiros 10 resultados (texto/url):`,
+        diagnostico.primeiros10,
+      );
+      console.log(
+        `[DIAG][lista-resultados][${etiqueta}] info de scroll (scrollTop/scrollHeight/clientHeight/temMaisParaRolar):`,
+        diagnostico.scrollInfo,
+      );
+      console.log(
+        `[DIAG][lista-resultados][${etiqueta}] indicador de "carregar mais"/loading detectado:`,
+        diagnostico.indicadorCarregamento,
+      );
+    } catch (erroDiagnosticoLista) {
+      console.error(
+        `[DIAG][lista-resultados][${etiqueta}] Falha ao capturar diagnóstico:`,
+        erroDiagnosticoLista,
+      );
+    }
+  }
+  // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
 
   // Best-effort: captura screenshot/HTML/URL/título da página atual para
   // descobrir o que o Google retornou quando role="feed" não aparece (DOM
@@ -1119,6 +1218,11 @@ export class ScraperService {
           const resultsContainer = page.locator('[role="feed"]');
           const empresasMap = new Map<string, CardResultado>();
 
+          await this.capturarDiagnosticoListaResultados(
+            page,
+            'antes-da-coleta-inicial',
+          );
+
           const coletarResultados = async () => {
             const cards = await page.$$eval('[role="article"]', (articles) =>
               articles.map((article) => {
@@ -1139,7 +1243,40 @@ export class ScraperService {
 
           await coletarResultados();
 
-          for (let i = 0; i < 5; i++) {
+          await this.capturarDiagnosticoListaResultados(
+            page,
+            'apos-coleta-inicial',
+          );
+
+          // Substitui o antigo loop fixo de 5 rolagens: continua rolando
+          // enquanto a lista estiver de fato crescendo, e para por uma de
+          // três condições — sem crescimento por algumas rodadas seguidas
+          // (feed provavelmente esgotado), limite máximo de resultados
+          // atingido, ou timeout de segurança. Isso acompanha o
+          // comportamento real do scroll infinito do Maps em vez de supor
+          // um número fixo de rolagens.
+          const inicioScroll = Date.now();
+          let tentativasSemCrescimento = 0;
+          let rodada = 0;
+          let motivoParada = 'loop encerrado sem condição de parada explícita';
+
+          while (true) {
+            rodada++;
+            const resultadosAntes = empresasMap.size;
+
+            console.log('[DIAG][scroll] rodada:', rodada);
+            console.log('[DIAG][scroll] resultados antes:', resultadosAntes);
+
+            if (resultadosAntes >= SCROLL_LIMITE_MAXIMO_RESULTADOS) {
+              motivoParada = `limite máximo de ${SCROLL_LIMITE_MAXIMO_RESULTADOS} resultados atingido`;
+              break;
+            }
+
+            if (Date.now() - inicioScroll >= SCROLL_TIMEOUT_MS) {
+              motivoParada = `timeout de segurança de ${SCROLL_TIMEOUT_MS / 1000}s atingido`;
+              break;
+            }
+
             try {
               await resultsContainer.evaluate((el) => {
                 el.scrollTop = el.scrollHeight;
@@ -1152,12 +1289,44 @@ export class ScraperService {
 
               await this.capturarDiagnosticoDeBloqueio(page);
 
+              motivoParada = 'role="feed" não encontrado ao tentar rolar';
               break;
             }
 
-            await page.waitForTimeout(2000);
+            await page.waitForTimeout(SCROLL_INTERVALO_ENTRE_RODADAS_MS);
             await coletarResultados();
+
+            const resultadosDepois = empresasMap.size;
+            console.log('[DIAG][scroll] resultados depois:', resultadosDepois);
+
+            await this.capturarDiagnosticoListaResultados(
+              page,
+              `apos-scroll-${rodada}`,
+            );
+
+            if (resultadosDepois > resultadosAntes) {
+              tentativasSemCrescimento = 0;
+            } else {
+              tentativasSemCrescimento++;
+
+              if (tentativasSemCrescimento >= SCROLL_MAX_TENTATIVAS_SEM_CRESCIMENTO) {
+                motivoParada = `sem crescimento por ${SCROLL_MAX_TENTATIVAS_SEM_CRESCIMENTO} rodadas consecutivas`;
+                break;
+              }
+            }
           }
+
+          const duracaoScrollMs = Date.now() - inicioScroll;
+          console.log('[DIAG][scroll] motivo da parada:', motivoParada);
+          console.log('[DIAG][scroll] total de rodadas:', rodada);
+          console.log('[DIAG][scroll] duração total do scroll (ms):', duracaoScrollMs);
+
+          await this.capturarDiagnosticoListaResultados(page, 'final');
+
+          console.log(
+            '[DIAG][lista-resultados][final] total de empresas únicas no empresasMap (após dedup por URL):',
+            empresasMap.size,
+          );
 
           results = Array.from(empresasMap.values());
         }

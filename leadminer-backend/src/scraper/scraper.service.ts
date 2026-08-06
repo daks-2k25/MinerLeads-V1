@@ -1,12 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { writeFile } from 'fs/promises';
-import {
-  Browser,
-  BrowserContext,
-  Locator,
-  Page,
-  chromium,
-} from 'playwright-core';
+import { Browser, BrowserContext, Page, chromium } from 'playwright-core';
 import chromiumServerless from '@sparticuz/chromium';
 import { LeadsService } from '../leads/leads.service';
 import { SearchHistoryService } from '../search-history/search-history.service';
@@ -172,210 +165,156 @@ export class ScraperService {
   // registra a busca em SearchHistory e vincula os leads retornados via
   // SearchHistoryLead. Ainda sem uso do Dashboard.
   async start(dto: StartScraperDto): Promise<ScrapedLead[]> {
-    // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após achar a causa do 500) ====
-    console.log('[DIAG][scraper] start() - início do método', { dto });
+    if (this.scrapingEmAndamento) {
+      throw new Error('Já existe um scraping em andamento');
+    }
+
+    this.scrapingEmAndamento = true;
+    const inicioTotal = Date.now();
 
     try {
-      console.log(
-        '[DIAG][scraper] validação de concorrência - verificando lock',
-      );
-      if (this.scrapingEmAndamento) {
-        console.log(
-          '[DIAG][scraper] validação de concorrência - BLOQUEADO (scraping já em andamento)',
-        );
-        throw new Error('Já existe um scraping em andamento');
-      }
-      console.log('[DIAG][scraper] validação de concorrência - liberado');
+      const buscaComCidade = [dto.termoBusca, dto.bairro, dto.cidade]
+        .filter(Boolean)
+        .join(' ');
 
-      this.scrapingEmAndamento = true;
-      const inicioTotal = Date.now();
+      const browser = await this.lancarBrowser();
+
+      // Contexto único, mantido aberto durante toda a execução (busca +
+      // todas as empresas). Cada Page continua sendo aberta e fechada
+      // individualmente (regra de páginas separadas preservada) — o que
+      // muda é que elas nascem de context.newPage(), não de
+      // browser.newPage(). browser.newPage() cria implicitamente um
+      // BrowserContext descartável por chamada, que é destruído junto com
+      // a Page ao fechá-la; isso deixava o browser sem nenhum target
+      // registrado entre o fim da busca e o início de cada empresa (e
+      // entre uma empresa e a próxima), janela em que o processo do
+      // Chromium (em especial o binário empacotado do @sparticuz/chromium
+      // usado em produção) pode se considerar ocioso e finalizar sozinho —
+      // causando "Target page, context or browser has been closed" na
+      // próxima chamada de newPage().
+      //
+      // Força locale/timezone/Accept-Language para Brasil: o Chromium
+      // empacotado do Render resolve o Google Maps em contexto
+      // internacional por padrão (en-US/UTC), o que troca o rótulo do
+      // botão de pesquisa para "Search" em vez de "Pesquisar" e altera a
+      // interface exibida. Sem geolocation fixa — era um teste pontual
+      // (coordenadas hardcoded de Curitiba/Batel) que não deve influenciar
+      // buscas de outras cidades/bairros.
+      const context = await browser.newContext({
+        locale: 'pt-BR',
+        timezoneId: 'America/Sao_Paulo',
+        extraHTTPHeaders: {
+          'Accept-Language': 'pt-BR',
+        },
+      });
 
       try {
-        const buscaComCidade = [dto.termoBusca, dto.bairro, dto.cidade]
-          .filter(Boolean)
-          .join(' ');
+        // buscarListaDeEmpresas() abre e fecha sua própria Page — se ela
+        // lançar exceção, o finally abaixo ainda fecha o contexto/browser.
+        const results = await this.buscarListaDeEmpresas(
+          context,
+          buscaComCidade,
+        );
+        const tempoListaMs = Date.now() - inicioTotal;
 
-        console.log('[DIAG][scraper] antes de criar o navegador');
-        const browser = await this.lancarBrowser();
-        console.log('[DIAG][scraper] navegador criado com sucesso');
+        const inicioDetalhes = Date.now();
 
-        // Contexto único, mantido aberto durante toda a execução (busca +
-        // todas as empresas). Cada Page continua sendo aberta e fechada
-        // individualmente (regra de páginas separadas preservada) — o que
-        // muda é que elas nascem de context.newPage(), não de
-        // browser.newPage(). browser.newPage() cria implicitamente um
-        // BrowserContext descartável por chamada, que é destruído junto com
-        // a Page ao fechá-la; isso deixava o browser sem nenhum target
-        // registrado entre o fim da busca e o início de cada empresa (e
-        // entre uma empresa e a próxima), janela em que o processo do
-        // Chromium (em especial o binário empacotado do @sparticuz/chromium
-        // usado em produção) pode se considerar ocioso e finalizar sozinho —
-        // causando "Target page, context or browser has been closed" na
-        // próxima chamada de newPage().
-        // ==== ALTERAÇÃO TEMPORÁRIA DE TESTE (remover após validar a hipótese do contexto internacional do Chromium no Render — NÃO é a correção definitiva) ====
-        // Testa se forçar locale/timezone/geolocation/Accept-Language para
-        // Brasil muda a resolução regional do Google Maps no Render (hoje
-        // resolve em en-US/UTC, com botão "Search" em vez de "Pesquisar", e
-        // ocasionalmente cai direto em /maps/place/). Geolocation aponta
-        // para Curitiba/Batel — mesma região usada nas buscas de teste.
-        const context = await browser.newContext({
-          locale: 'pt-BR',
-          timezoneId: 'America/Sao_Paulo',
-          geolocation: { latitude: -25.4411, longitude: -49.276 },
-          permissions: ['geolocation'],
-          extraHTTPHeaders: {
-            'Accept-Language': 'pt-BR',
+        console.log(
+          '[inicio-processamento-paralelo] quantidade total de empresas:',
+          results.length,
+        );
+
+        const empresas = await processarComConcorrenciaLimitada<
+          CardResultado,
+          ScrapedLead
+        >(
+          results,
+          CONCORRENCIA_MAXIMA_PROCESSAMENTO_EMPRESAS,
+          async (result) => {
+            if (!result.urlMaps) return null;
+
+            const nomeEmpresa = result.nome ?? result.urlMaps;
+            const inicioEmpresa = Date.now();
+            console.log('[empresa-iniciada] nome:', nomeEmpresa);
+
+            try {
+              // extrairDetalheDeEmpresa() abre e fecha sua própria Page de
+              // detalhe — nunca reaproveita a Page usada na busca/listagem.
+              const empresa = await this.extrairDetalheDeEmpresa(
+                context,
+                result,
+                dto,
+              );
+
+              console.log(
+                '[empresa-finalizada] nome:',
+                nomeEmpresa,
+                'tempoGastoMs:',
+                Date.now() - inicioEmpresa,
+              );
+
+              return empresa;
+            } catch (erro) {
+              console.error(
+                `[scraper] Falha ao processar empresa "${nomeEmpresa}", ignorando e seguindo para a próxima:`,
+                erro instanceof Error ? erro.message : erro,
+              );
+              console.log(
+                '[empresa-finalizada] nome:',
+                nomeEmpresa,
+                'tempoGastoMs:',
+                Date.now() - inicioEmpresa,
+                '(com erro)',
+              );
+
+              return null;
+            }
           },
+        );
+
+        const tempoDetalhesMs = Date.now() - inicioDetalhes;
+
+        console.log('[resumo-processamento] empresas encontradas:', results.length);
+        console.log('[resumo-processamento] empresas processadas:', empresas.length);
+        console.log(
+          '[resumo-processamento] tempo total de detalhes (ms):',
+          tempoDetalhesMs,
+        );
+        const tempoTotalMs = Date.now() - inicioTotal;
+        const cache = empresas.filter((e) => e.isCached).length;
+        const novos = empresas.filter((e) => !e.isCached).length;
+
+        this.registrarLogDePerformance(dto, {
+          empresasEncontradas: results.length,
+          empresasProcessadas: empresas.length,
+          cache,
+          novos,
+          tempoListaMs,
+          tempoDetalhesMs,
+          tempoTotalMs,
         });
-        // ==== FIM DA ALTERAÇÃO TEMPORÁRIA DE TESTE ====
 
-        try {
-          // buscarListaDeEmpresas() abre e fecha sua própria Page — se ela
-          // lançar exceção, o finally abaixo ainda fecha o contexto/browser.
-          console.log('[DIAG][scraper] antes de buscarListaDeEmpresas()', {
-            buscaComCidade,
-          });
-          const results = await this.buscarListaDeEmpresas(
-            context,
-            buscaComCidade,
-          );
-          console.log(
-            '[DIAG][scraper] depois de buscarListaDeEmpresas() - retornou com sucesso',
-            {
-              totalResultados: results.length,
-            },
-          );
-          const tempoListaMs = Date.now() - inicioTotal;
+        await this.registrarHistorico(dto, empresas, novos, cache);
 
-          const inicioDetalhes = Date.now();
-
-          console.log('[DIAG][scraper] início do processamento das empresas', {
-            totalEmpresas: results.length,
-          });
-          console.log(
-            '[inicio-processamento-paralelo] quantidade total de empresas:',
-            results.length,
-          );
-
-          const empresas = await processarComConcorrenciaLimitada<
-            CardResultado,
-            ScrapedLead
-          >(
-            results,
-            CONCORRENCIA_MAXIMA_PROCESSAMENTO_EMPRESAS,
-            async (result) => {
-              if (!result.urlMaps) return null;
-
-              const nomeEmpresa = result.nome ?? result.urlMaps;
-              const inicioEmpresa = Date.now();
-              console.log('[empresa-iniciada] nome:', nomeEmpresa);
-
-              try {
-                // extrairDetalheDeEmpresa() abre e fecha sua própria Page de
-                // detalhe — nunca reaproveita a Page usada na busca/listagem.
-                const empresa = await this.extrairDetalheDeEmpresa(
-                  context,
-                  result,
-                  dto,
-                );
-
-                console.log(
-                  '[empresa-finalizada] nome:',
-                  nomeEmpresa,
-                  'tempoGastoMs:',
-                  Date.now() - inicioEmpresa,
-                );
-
-                return empresa;
-              } catch (erro) {
-                console.error(
-                  `[scraper] Falha ao processar empresa "${nomeEmpresa}", ignorando e seguindo para a próxima:`,
-                  erro instanceof Error ? erro.message : erro,
-                );
-                console.log(
-                  '[empresa-finalizada] nome:',
-                  nomeEmpresa,
-                  'tempoGastoMs:',
-                  Date.now() - inicioEmpresa,
-                  '(com erro)',
-                );
-
-                return null;
-              }
-            },
-          );
-
-          console.log('[DIAG][scraper] fim do processamento das empresas', {
-            processadas: empresas.length,
-          });
-
-          const tempoDetalhesMs = Date.now() - inicioDetalhes;
-
-          console.log('[resumo-processamento] empresas encontradas:', results.length);
-          console.log('[resumo-processamento] empresas processadas:', empresas.length);
-          console.log(
-            '[resumo-processamento] tempo total de detalhes (ms):',
-            tempoDetalhesMs,
-          );
-          const tempoTotalMs = Date.now() - inicioTotal;
-          const cache = empresas.filter((e) => e.isCached).length;
-          const novos = empresas.filter((e) => !e.isCached).length;
-
-          this.registrarLogDePerformance(dto, {
-            empresasEncontradas: results.length,
-            empresasProcessadas: empresas.length,
-            cache,
-            novos,
-            tempoListaMs,
-            tempoDetalhesMs,
-            tempoTotalMs,
-          });
-
-          console.log('[DIAG][scraper] antes de registrarHistorico()');
-          await this.registrarHistorico(dto, empresas, novos, cache);
-          console.log('[DIAG][scraper] depois de registrarHistorico()');
-
-          return empresas;
-        } finally {
-          console.log('[DIAG][scraper] antes de fechar o contexto/navegador');
-          try {
-            await context.close();
-          } catch (erroFechamentoContexto) {
-            console.error(
-              'Erro ao fechar o contexto do navegador:',
-              erroFechamentoContexto,
-            );
-          }
-          try {
-            await browser.close();
-            console.log('[DIAG][scraper] navegador fechado com sucesso');
-          } catch (erroFechamento) {
-            console.error('Erro ao fechar o navegador:', erroFechamento);
-          }
-        }
+        return empresas;
       } finally {
-        this.scrapingEmAndamento = false;
+        try {
+          await context.close();
+        } catch (erroFechamentoContexto) {
+          console.error(
+            'Erro ao fechar o contexto do navegador:',
+            erroFechamentoContexto,
+          );
+        }
+        try {
+          await browser.close();
+        } catch (erroFechamento) {
+          console.error('Erro ao fechar o navegador:', erroFechamento);
+        }
       }
-    } catch (error) {
-      console.error(
-        '[DIAG][scraper] EXCEÇÃO CAPTURADA em start() ==========================',
-      );
-      console.error('[DIAG][scraper] error:', error);
-      console.error(
-        '[DIAG][scraper] error.message:',
-        error instanceof Error ? error.message : undefined,
-      );
-      console.error(
-        '[DIAG][scraper] error.stack:',
-        error instanceof Error ? error.stack : undefined,
-      );
-      console.error(
-        '[DIAG][scraper] constructor.name:',
-        (error as { constructor?: { name?: string } })?.constructor?.name,
-      );
-      throw error;
+    } finally {
+      this.scrapingEmAndamento = false;
     }
-    // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
   }
 
   // Processa uma única empresa com timeout (item 2) e retry de navegação
@@ -422,10 +361,7 @@ export class ScraperService {
     try {
       return await withTimeout(
         (async () => {
-          // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após identificar onde extrairDetalheDeEmpresa() trava) ====
-          console.log('[DIAG][empresa] antes navegarComRetry', result.urlMaps);
           await this.navegarComRetry(page, url, result.nome);
-          console.log('[DIAG][empresa] depois navegarComRetry');
 
           try {
             await page.waitForSelector('h1', { timeout: 15000 });
@@ -434,10 +370,8 @@ export class ScraperService {
             // scraper antigo)
           }
 
-          console.log('[DIAG][empresa] antes extrairDadosEmpresa');
           const companyData = await this.extrairDadosEmpresa(page);
           if (expirou) return null;
-          console.log('[DIAG][empresa] dados extraídos', companyData);
 
           const { isCached, cachedLeadId } =
             await this.consultarCachePorPlaceId(placeId);
@@ -447,7 +381,6 @@ export class ScraperService {
           // update por placeId) como resposta — garante id/cidade/categoria/
           // capturadoEm reais e iguais ao que está no banco, para leads novos
           // e já existentes.
-          console.log('[DIAG][empresa] antes salvar lead');
           const leadPersistido = await this.leadsService.upsertByPlaceId({
             placeId,
             nome: this.limparTexto(companyData.nome),
@@ -460,8 +393,6 @@ export class ScraperService {
             capturadoEm: new Date(),
           });
           if (expirou) return null;
-          console.log('[DIAG][empresa] lead salvo');
-          // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
 
           return {
             id: leadPersistido.id,
@@ -633,25 +564,13 @@ export class ScraperService {
 
   // Portado de src/scraper/maps.ts
   private async lancarBrowser(): Promise<Browser> {
-    // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após achar a causa do 500) ====
-    console.log(
-      '[DIAG][scraper] abertura do navegador - antes de chromium.launch()',
-      {
-        PRECISA_CHROMIUM_EMPACOTADO,
-      },
-    );
-    const browser = PRECISA_CHROMIUM_EMPACOTADO
+    return PRECISA_CHROMIUM_EMPACOTADO
       ? await chromium.launch({
           args: chromiumServerless.args,
           executablePath: await chromiumServerless.executablePath(),
           headless: true,
         })
       : await chromium.launch({ headless: true });
-    console.log(
-      '[DIAG][scraper] abertura do navegador - depois de chromium.launch(), sucesso',
-    );
-    return browser;
-    // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
   }
 
   // Faz polling de page.url() por até `timeoutMs` (checando a cada
@@ -687,8 +606,9 @@ export class ScraperService {
   // (scrollHeight vs clientHeight/scrollTop) e se existe algum indicador de
   // "carregar mais"/spinner de loading dentro do feed. Só lê o estado
   // atual — nunca altera a lógica real de coleta/scroll (coletarResultados,
-  // o loop de 5 iterações, o dedup por URL). Nunca lança: qualquer falha na
-  // própria captura só é logada, sem afetar o fluxo de busca.
+  // o loop baseado em crescimento, o dedup por placeId). Nunca lança:
+  // qualquer falha na própria captura só é logada, sem afetar o fluxo de
+  // busca.
   private async capturarDiagnosticoListaResultados(
     page: Page,
     etiqueta: string,
@@ -768,418 +688,6 @@ export class ScraperService {
   }
   // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
 
-  // Best-effort: captura screenshot/HTML/URL/título da página atual para
-  // descobrir o que o Google retornou quando role="feed" não aparece (DOM
-  // mudou, tela de consentimento, CAPTCHA, etc.). Nunca lança — qualquer
-  // falha na própria captura só é logada, sem afetar o fluxo do scraper.
-  // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após identificar a causa do timeout de [role="feed"]) ====
-  private async capturarDiagnosticoDeBloqueio(page: Page): Promise<void> {
-    try {
-      const urlAtual = page.url();
-      const tituloAtual = await page.title();
-      const html = await page.content();
-
-      console.log(
-        '[DIAG][scraper] role=feed não encontrado - URL atual:',
-        urlAtual,
-      );
-      console.log(
-        '[DIAG][scraper] role=feed não encontrado - título da página:',
-        tituloAtual,
-      );
-      console.log(
-        '[DIAG][scraper] role=feed não encontrado - tamanho do HTML capturado (caracteres):',
-        html.length,
-      );
-
-      // Análise em memória do HTML capturado — não depende de acesso ao
-      // filesystem do Render, só dos logs. Contagens são case-sensitive
-      // (strings literais do HTML); a busca por indicadores de bloqueio
-      // é case-insensitive (título/HTML podem variar maiúsculas).
-      const htmlEmMinusculas = html.toLowerCase();
-      const tituloEmMinusculas = tituloAtual.toLowerCase();
-
-      const possiveisIndicadoresDeBloqueio = [
-        'consent',
-        'captcha',
-        'unusual traffic',
-      ].filter(
-        (termo) =>
-          tituloEmMinusculas.includes(termo) ||
-          htmlEmMinusculas.includes(termo),
-      );
-
-      const contarOcorrencias = (texto: string, termo: string) =>
-        texto.split(termo).length - 1;
-
-      const resumoDiagnosticoRoleFeed = {
-        urlAtual,
-        tituloAtual,
-        tamanhoHtml: html.length,
-        possiveisIndicadoresDeBloqueio,
-        ocorrencias: {
-          'role="feed"': contarOcorrencias(html, 'role="feed"'),
-          'role="article"': contarOcorrencias(html, 'role="article"'),
-          'Não foi possível': contarOcorrencias(html, 'Não foi possível'),
-          'Parece que você está fazendo muitas pesquisas': contarOcorrencias(
-            html,
-            'Parece que você está fazendo muitas pesquisas',
-          ),
-        },
-      };
-
-      console.log(
-        '[DIAG][scraper] resumo do diagnóstico de role=feed:',
-        resumoDiagnosticoRoleFeed,
-      );
-
-      await page.screenshot({ path: '/tmp/google-maps-debug.png' });
-      await writeFile('/tmp/google-maps-debug.html', html);
-
-      console.log(
-        '[DIAG][scraper] role=feed não encontrado - screenshot e HTML salvos em /tmp/google-maps-debug.png e /tmp/google-maps-debug.html',
-      );
-    } catch (erroDiagnostico) {
-      console.error(
-        '[DIAG][scraper] Falha ao capturar diagnóstico (screenshot/HTML) do timeout de role=feed:',
-        erroDiagnostico,
-      );
-    }
-  }
-  // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
-
-  // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após confirmar/eliminar a hipótese do autocomplete) ====
-  // Investiga se o Google Maps tem uma sugestão de autocomplete
-  // pré-destacada no instante exato antes do Enter — se houver, o Enter
-  // pode estar aceitando essa sugestão em vez de fazer a busca textual
-  // literal do campo, o que explicaria o redirecionamento direto para
-  // /maps/place/. Só lê o estado atual do DOM/input — nunca clica, nunca
-  // digita, nunca altera nada. Nunca lança: qualquer falha na própria
-  // captura só é logada, sem afetar o fluxo de busca.
-  private async capturarDiagnosticoAutocomplete(
-    page: Page,
-    searchInput: Locator,
-  ): Promise<void> {
-    try {
-      const inputValue = await searchInput.inputValue();
-
-      const estadoDom = await page.evaluate(() => {
-        const input = document.querySelector('input[name="q"]');
-
-        const aria = input
-          ? {
-              ariaExpanded: input.getAttribute('aria-expanded'),
-              ariaActivedescendant: input.getAttribute('aria-activedescendant'),
-              ariaControls: input.getAttribute('aria-controls'),
-              role: input.getAttribute('role'),
-            }
-          : null;
-
-        const candidatos = Array.from(
-          document.querySelectorAll('[role="option"], [aria-selected]'),
-        );
-
-        const suggestions = candidatos.map((el) => ({
-          texto: el.textContent?.trim().slice(0, 200) ?? null,
-          id: el.getAttribute('id'),
-          role: el.getAttribute('role'),
-          ariaSelected: el.getAttribute('aria-selected'),
-          tag: el.tagName,
-        }));
-
-        const activeDescendantId =
-          input?.getAttribute('aria-activedescendant') ?? null;
-        const activeDescendantEl = activeDescendantId
-          ? document.getElementById(activeDescendantId)
-          : null;
-
-        const activeItem = activeDescendantEl
-          ? {
-              origem: 'aria-activedescendant',
-              id: activeDescendantEl.getAttribute('id'),
-              texto:
-                activeDescendantEl.textContent?.trim().slice(0, 200) ?? null,
-            }
-          : (suggestions.find((s) => s.ariaSelected === 'true') ?? null);
-
-        const listbox = document.querySelector('[role="listbox"]');
-
-        return {
-          aria,
-          suggestions,
-          activeItem,
-          dropdown: {
-            listboxPresente: Boolean(listbox),
-            outerHtmlTrecho: listbox?.outerHTML.slice(0, 1000) ?? null,
-          },
-        };
-      });
-
-      const screenshotPath = '/tmp/autocomplete-before-enter.png';
-      await page.screenshot({ path: screenshotPath });
-
-      console.log('[AUTOCOMPLETE DEBUG] input:', inputValue);
-      console.log('[AUTOCOMPLETE DEBUG] aria:', estadoDom.aria);
-      console.log('[AUTOCOMPLETE DEBUG] suggestions:', {
-        total: estadoDom.suggestions.length,
-        itens: estadoDom.suggestions,
-      });
-      console.log('[AUTOCOMPLETE DEBUG] active item:', estadoDom.activeItem);
-      console.log('[AUTOCOMPLETE DEBUG] dropdown dom:', estadoDom.dropdown);
-      console.log('[AUTOCOMPLETE DEBUG] screenshot:', screenshotPath);
-    } catch (erroDiagnosticoAutocomplete) {
-      console.error(
-        '[AUTOCOMPLETE DEBUG] Falha ao capturar diagnóstico de autocomplete:',
-        erroDiagnosticoAutocomplete,
-      );
-    }
-  }
-  // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
-
-  // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após identificar por que button[aria-label="Pesquisar"] não é encontrado no Render) ====
-  // Em produção (Render) o fallback para Enter foi acionado, indicando que
-  // button[aria-label="Pesquisar"] não foi localizado a tempo nesse
-  // ambiente. Antes de mexer na lógica do clique/fallback, lista todos os
-  // <button> visíveis no DOM nesse momento e verifica explicitamente a
-  // presença do seletor usado, para descobrir se o botão não existe, existe
-  // com outro aria-label, ou só ainda não estava visível. Só lê o estado
-  // atual — nunca clica, nunca digita. Nunca lança: qualquer falha na
-  // própria captura só é logada, sem afetar o fluxo de busca.
-  private async capturarDiagnosticoBotaoPesquisa(page: Page): Promise<void> {
-    try {
-      const diagnostico = await page.evaluate(() => {
-        function estaVisivel(el: Element): boolean {
-          const rect = el.getBoundingClientRect();
-          const style = window.getComputedStyle(el);
-          return (
-            rect.width > 0 &&
-            rect.height > 0 &&
-            style.visibility !== 'hidden' &&
-            style.display !== 'none' &&
-            (el as HTMLElement).offsetParent !== null
-          );
-        }
-
-        function estaHabilitado(el: Element): boolean {
-          const desabilitadoPorAtributo = el.hasAttribute('disabled');
-          const ariaDisabled = el.getAttribute('aria-disabled');
-          return !desabilitadoPorAtributo && ariaDisabled !== 'true';
-        }
-
-        function boundingBoxDe(el: Element) {
-          const rect = el.getBoundingClientRect();
-          return {
-            x: rect.x,
-            y: rect.y,
-            width: rect.width,
-            height: rect.height,
-          };
-        }
-
-        function descreverCandidato(el: Element, origem: string) {
-          return {
-            origem,
-            tag: el.tagName,
-            ariaLabel: el.getAttribute('aria-label'),
-            texto: el.textContent?.trim().slice(0, 100) || null,
-            classe: (el as HTMLElement).className || null,
-            jsaction: el.getAttribute('jsaction'),
-            visivel: estaVisivel(el),
-            habilitado: estaHabilitado(el),
-            boundingBox: boundingBoxDe(el),
-          };
-        }
-
-        const botoesVisiveis = Array.from(document.querySelectorAll('button'))
-          .filter(estaVisivel)
-          .map((el) => ({
-            ariaLabel: el.getAttribute('aria-label'),
-            texto: el.textContent?.trim().slice(0, 100) || null,
-            classe: el.className || null,
-          }));
-
-        const candidatosPesquisar = Array.from(
-          document.querySelectorAll('button[aria-label="Pesquisar"]'),
-        );
-        const candidatosSearch = Array.from(
-          document.querySelectorAll('button[aria-label="Search"]'),
-        );
-        const candidatosJsaction = Array.from(
-          document.querySelectorAll('[jsaction]'),
-        ).filter((el) =>
-          (el.getAttribute('jsaction') ?? '').includes('omnibox.search'),
-        );
-
-        const candidatos = [
-          ...candidatosPesquisar.map((el) =>
-            descreverCandidato(el, 'button[aria-label="Pesquisar"]'),
-          ),
-          ...candidatosSearch.map((el) =>
-            descreverCandidato(el, 'button[aria-label="Search"]'),
-          ),
-          ...candidatosJsaction.map((el) =>
-            descreverCandidato(el, 'jsaction contém "omnibox.search"'),
-          ),
-        ];
-
-        return {
-          botoesVisiveis,
-          contagem: {
-            ariaLabelPesquisar: candidatosPesquisar.length,
-            ariaLabelSearch: candidatosSearch.length,
-            jsactionOmniboxSearch: candidatosJsaction.length,
-          },
-          candidatos,
-        };
-      });
-
-      const labelsDisponiveis = diagnostico.botoesVisiveis
-        .map((botao) => botao.ariaLabel)
-        .filter((label): label is string => Boolean(label));
-
-      console.log(
-        '[DIAG][botao-pesquisa] total de botões visíveis:',
-        diagnostico.botoesVisiveis.length,
-      );
-      console.log(
-        '[DIAG][botao-pesquisa] botões visíveis:',
-        diagnostico.botoesVisiveis,
-      );
-      console.log(
-        '[DIAG][botao-pesquisa] labels (aria-label) disponíveis:',
-        labelsDisponiveis,
-      );
-      console.log(
-        '[DIAG][botao-pesquisa] quantidade de button[aria-label="Pesquisar"] encontrados:',
-        diagnostico.contagem.ariaLabelPesquisar,
-      );
-      console.log(
-        '[DIAG][botao-pesquisa] quantidade de button[aria-label="Search"] encontrados:',
-        diagnostico.contagem.ariaLabelSearch,
-      );
-      console.log(
-        '[DIAG][botao-pesquisa] quantidade de elementos com jsaction contendo "omnibox.search":',
-        diagnostico.contagem.jsactionOmniboxSearch,
-      );
-      console.log(
-        '[DIAG][botao-pesquisa] detalhes dos candidatos encontrados (visível/habilitado/boundingBox):',
-        diagnostico.candidatos,
-      );
-    } catch (erroDiagnosticoBotao) {
-      console.error(
-        '[DIAG][botao-pesquisa] Falha ao capturar diagnóstico do botão de pesquisa:',
-        erroDiagnosticoBotao,
-      );
-    }
-  }
-  // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
-
-  // ==== INSTRUMENTAÇÃO TEMPORÁRIA DE DIAGNÓSTICO (remover após entender por que o Google Maps às vezes resolve direto para /maps/place/ no Render) ====
-  // Investiga o contexto inicial (idioma, timezone, geolocalização,
-  // user-agent, coordenadas na URL etc.) que o Google Maps recebe assim que
-  // a página abre no Render, antes de qualquer interação (fill/click/Enter).
-  // Hipótese em investigação: esse contexto pode influenciar a decisão do
-  // Google de resolver a busca direto para /maps/place/ em vez de
-  // /maps/search/. Só lê o estado atual — nunca altera BrowserContext,
-  // geolocation, locale, timezone, user-agent nem a lógica de busca. Nunca
-  // lança: qualquer falha na própria captura só é logada, sem afetar o
-  // fluxo de busca.
-  private async capturarDiagnosticoContextoInicial(
-    page: Page,
-    urlImediatamenteAposAbrir: string,
-  ): Promise<void> {
-    try {
-      console.log(
-        '[DIAG][contexto-inicial] URL imediatamente após abrir a página:',
-        urlImediatamenteAposAbrir,
-      );
-
-      try {
-        await page.waitForLoadState('load', { timeout: 10000 });
-      } catch (erroWaitLoad) {
-        console.warn(
-          '[DIAG][contexto-inicial] waitForLoadState("load") não completou a tempo (best-effort, seguindo mesmo assim):',
-          erroWaitLoad instanceof Error ? erroWaitLoad.message : erroWaitLoad,
-        );
-      }
-
-      const urlAposCarregamentoCompleto = page.url();
-      const titulo = await page.title();
-
-      const infoNavegador = await page.evaluate(() => {
-        let timeZone: string | null = null;
-        try {
-          timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        } catch {
-          timeZone = null;
-        }
-
-        return {
-          navigatorLanguage: navigator.language,
-          navigatorLanguages: navigator.languages
-            ? Array.from(navigator.languages)
-            : null,
-          timeZone,
-          navigatorPlatform: navigator.platform,
-          navigatorUserAgent: navigator.userAgent,
-          documentLang: document.documentElement.lang || null,
-          geolocationDisponivel: 'geolocation' in navigator,
-        };
-      });
-
-      const matchCoordenadas = urlAposCarregamentoCompleto.match(
-        /@(-?\d+\.\d+),(-?\d+\.\d+)/,
-      );
-      const coordenadasNaUrl = matchCoordenadas
-        ? { lat: Number(matchCoordenadas[1]), lng: Number(matchCoordenadas[2]) }
-        : null;
-
-      console.log(
-        '[DIAG][contexto-inicial] URL após o carregamento completo:',
-        urlAposCarregamentoCompleto,
-      );
-      console.log('[DIAG][contexto-inicial] título da página:', titulo);
-      console.log(
-        '[DIAG][contexto-inicial] navigator.language:',
-        infoNavegador.navigatorLanguage,
-      );
-      console.log(
-        '[DIAG][contexto-inicial] navigator.languages:',
-        infoNavegador.navigatorLanguages,
-      );
-      console.log(
-        '[DIAG][contexto-inicial] Intl.DateTimeFormat().resolvedOptions().timeZone:',
-        infoNavegador.timeZone,
-      );
-      console.log(
-        '[DIAG][contexto-inicial] navigator.platform:',
-        infoNavegador.navigatorPlatform,
-      );
-      console.log(
-        '[DIAG][contexto-inicial] navigator.userAgent:',
-        infoNavegador.navigatorUserAgent,
-      );
-      console.log(
-        '[DIAG][contexto-inicial] document.documentElement.lang:',
-        infoNavegador.documentLang,
-      );
-      console.log(
-        '[DIAG][contexto-inicial] navigator.geolocation disponível:',
-        infoNavegador.geolocationDisponivel,
-      );
-      console.log(
-        '[DIAG][contexto-inicial] coordenadas encontradas na URL (@lat,long):',
-        coordenadasNaUrl,
-      );
-    } catch (erroDiagnosticoContexto) {
-      console.error(
-        '[DIAG][contexto-inicial] Falha ao capturar diagnóstico de contexto inicial:',
-        erroDiagnosticoContexto,
-      );
-    }
-  }
-  // ==== FIM DA INSTRUMENTAÇÃO TEMPORÁRIA ====
-
   // Portado de src/scraper/maps.ts — busca e coleta a lista de empresas
   // usando uma Page própria, criada e fechada inteiramente dentro desta
   // função (no finally, sucesso ou falha). Nunca devolve a Page para quem
@@ -1224,8 +732,6 @@ export class ScraperService {
         timeout: 60000,
       });
 
-      await this.capturarDiagnosticoContextoInicial(page, page.url());
-
       await page.waitForTimeout(5000);
 
       const searchInput = page.locator('input[name="q"]');
@@ -1237,8 +743,6 @@ export class ScraperService {
       await searchInput.fill(termoNormalizado);
       await page.waitForTimeout(2000);
 
-      await this.capturarDiagnosticoAutocomplete(page, searchInput);
-
       // Investigação prévia (10x Enter vs 10x clique real) mostrou que
       // searchInput.press('Enter') pode aceitar uma sugestão de autocomplete
       // pré-destacada e pular direto para /maps/place/ (1/10 execuções),
@@ -1249,8 +753,6 @@ export class ScraperService {
       // Diagnóstico em produção (Render) mostrou que o botão existe com
       // aria-label="Search" (não "Pesquisar") nesse ambiente — o Maps
       // resolveu em inglês ali. O seletor aceita os dois rótulos.
-      await this.capturarDiagnosticoBotaoPesquisa(page);
-
       const botaoPesquisa = page.locator(
         'button[aria-label="Pesquisar"], button[aria-label="Search"]',
       );
@@ -1329,8 +831,16 @@ export class ScraperService {
             );
 
             for (const card of cards) {
-              if (card.urlMaps && !empresasMap.has(card.urlMaps)) {
-                empresasMap.set(card.urlMaps, card);
+              if (!card.urlMaps) continue;
+
+              // Dedup por placeId (mesmo extrator usado em
+              // extrairDetalheDeEmpresa), não pela URL completa — a href do
+              // card pode trazer parâmetros voláteis (authuser, hl, rclk)
+              // que variam entre renders da mesma empresa e quebrariam a
+              // deduplicação por string bruta.
+              const placeId = this.extrairPlaceId(card.urlMaps);
+              if (placeId && !empresasMap.has(placeId)) {
+                empresasMap.set(placeId, card);
               }
             }
           };
@@ -1381,8 +891,6 @@ export class ScraperService {
                 erro,
               );
 
-              await this.capturarDiagnosticoDeBloqueio(page);
-
               motivoParada = 'role="feed" não encontrado ao tentar rolar';
               break;
             }
@@ -1418,7 +926,7 @@ export class ScraperService {
           await this.capturarDiagnosticoListaResultados(page, 'final');
 
           console.log(
-            '[DIAG][lista-resultados][final] total de empresas únicas no empresasMap (após dedup por URL):',
+            '[DIAG][lista-resultados][final] total de empresas únicas no empresasMap (após dedup por placeId):',
             empresasMap.size,
           );
 

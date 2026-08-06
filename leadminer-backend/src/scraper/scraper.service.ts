@@ -997,9 +997,15 @@ export class ScraperService {
       // enquanto o clique no botão real de pesquisa da omnibox não
       // apresentou esse comportamento em 10/10 execuções. Fallback para
       // Enter cobre o caso do botão não estar disponível no DOM.
+      //
+      // Diagnóstico em produção (Render) mostrou que o botão existe com
+      // aria-label="Search" (não "Pesquisar") nesse ambiente — o Maps
+      // resolveu em inglês ali. O seletor aceita os dois rótulos.
       await this.capturarDiagnosticoBotaoPesquisa(page);
 
-      const botaoPesquisa = page.locator('button[aria-label="Pesquisar"]');
+      const botaoPesquisa = page.locator(
+        'button[aria-label="Pesquisar"], button[aria-label="Search"]',
+      );
       try {
         await botaoPesquisa.waitFor({ state: 'visible', timeout: 5000 });
         await botaoPesquisa.click();

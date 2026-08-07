@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { API_BASE_URL } from "@/lib/apiConfig";
 import { Lead } from "@/src/models/lead";
 import { SearchStatus } from "@/components/feedback/StatusBanner";
@@ -15,6 +15,29 @@ function mensagemSucesso(quantidade: number) {
 
 function mensagemErro(detalhe?: string) {
   return `Não foi possível concluir a busca${detalhe ? `: ${detalhe}` : "."}`;
+}
+
+function mensagemCancelada(quantidade: number) {
+  if (quantidade === 0) {
+    return "Busca cancelada pelo usuário.";
+  }
+  if (quantidade === 1) {
+    return "Busca cancelada pelo usuário. 1 lead foi capturado até o momento.";
+  }
+  return `Busca cancelada pelo usuário. ${quantidade} leads foram capturados até o momento.`;
+}
+
+interface BuscaAtualResponse {
+  emAndamento: boolean;
+  searchId: string | null;
+}
+
+interface CancelarBuscaResponse {
+  success: boolean;
+  cancelado: boolean;
+  searchId?: string;
+  totalResultados?: number;
+  message?: string;
 }
 
 // O NestJS (HttpExceptionFilter) devolve {statusCode, timestamp, path, message}.
@@ -46,8 +69,16 @@ export function useScraperSearch(onResultados: (leads: Lead[]) => void) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<SearchStatus | null>(null);
   const [progresso, setProgresso] = useState<{ etapa: string; progresso: number } | null>(null);
+  const [cancelando, setCancelando] = useState(false);
+  // Ref (não state): handlePesquisar é uma closure assíncrona criada no
+  // clique em "Pesquisar" — ler `cancelando`/`status` nela depois de um
+  // `await` não veria o cancelamento pedido durante a espera, pois cada
+  // render tem seu próprio snapshot do state. A ref é compartilhada e
+  // sempre reflete o valor mais recente, independente de closures.
+  const canceladoRef = useRef(false);
 
   const handlePesquisar = async () => {
+    canceladoRef.current = false;
     setLoading(true);
     setStatus(null);
     setProgresso(null);
@@ -70,7 +101,10 @@ export function useScraperSearch(onResultados: (leads: Lead[]) => void) {
 
       const leads: Lead[] = await response.json();
 
-      setStatus({ message: mensagemSucesso(leads.length), tone: "success" });
+      const mensagem = canceladoRef.current
+        ? mensagemCancelada(leads.length)
+        : mensagemSucesso(leads.length);
+      setStatus({ message: mensagem, tone: "success" });
       onResultados(leads);
     } catch (erro) {
       setStatus({
@@ -79,6 +113,63 @@ export function useScraperSearch(onResultados: (leads: Lead[]) => void) {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Não mexe em `loading`: quem controla o fim do carregamento continua
+  // sendo o `finally` de handlePesquisar, que só roda quando o POST
+  // /api/scraper original (ainda em andamento) resolve — isso já acontece
+  // naturalmente após o backend cancelar e encerrar a busca. Encerrar
+  // `loading` aqui mais cedo permitiria uma nova pesquisa antes do backend
+  // liberar `scrapingEmAndamento`, gerando o erro "Já existe um scraping em
+  // andamento".
+  const handleCancelarBusca = async () => {
+    if (cancelando) return;
+
+    setCancelando(true);
+    setStatus({ message: "Cancelando busca...", tone: "success" });
+
+    try {
+      const responseAtual = await fetch(`${API_BASE_URL}/api/scraper/atual`);
+      const atual: BuscaAtualResponse | null = await responseAtual
+        .json()
+        .catch(() => null);
+
+      if (!atual?.searchId) {
+        setStatus({
+          message: "Nenhuma busca em andamento para cancelar.",
+          tone: "error",
+        });
+        return;
+      }
+
+      const responseCancelar = await fetch(
+        `${API_BASE_URL}/api/scraper/${atual.searchId}/cancel`,
+        { method: "POST" },
+      );
+      const resultado: CancelarBuscaResponse | null = await responseCancelar
+        .json()
+        .catch(() => null);
+
+      if (resultado?.cancelado) {
+        canceladoRef.current = true;
+        setStatus({
+          message: "Busca cancelada. Encerrando...",
+          tone: "success",
+        });
+      } else {
+        setStatus({
+          message: mensagemErro(resultado?.message),
+          tone: "error",
+        });
+      }
+    } catch (erro) {
+      setStatus({
+        message: mensagemErro(erro instanceof Error ? erro.message : undefined),
+        tone: "error",
+      });
+    } finally {
+      setCancelando(false);
     }
   };
 
@@ -95,5 +186,7 @@ export function useScraperSearch(onResultados: (leads: Lead[]) => void) {
     status,
     progresso,
     handlePesquisar,
+    cancelando,
+    handleCancelarBusca,
   };
 }

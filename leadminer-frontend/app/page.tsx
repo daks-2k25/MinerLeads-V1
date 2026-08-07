@@ -37,6 +37,8 @@ export default function Home() {
     status,
     progresso,
     handlePesquisar,
+    cancelando,
+    handleCancelarBusca,
   } = useScraperSearch(setLeads);
   const { handleExportar, exportando, erro: erroExportacao } = useExportLeads(leads);
   const {
@@ -125,7 +127,9 @@ export default function Home() {
           onPesquisar={handlePesquisarComHistorico}
           onExportar={handleExportar}
           onSalvarBusca={() => setModalSalvarAberto(true)}
+          onCancelarBusca={handleCancelarBusca}
           loading={loading}
+          cancelando={cancelando}
           exportando={exportando}
           podeExportar={leads.length > 0}
           podeSalvarBusca={termoBusca.trim().length > 0}

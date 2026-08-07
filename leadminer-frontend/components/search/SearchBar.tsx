@@ -15,7 +15,9 @@ export interface SearchBarProps {
   onPesquisar: () => void;
   onExportar: () => void;
   onSalvarBusca: () => void;
+  onCancelarBusca: () => void;
   loading: boolean;
+  cancelando: boolean;
   exportando: boolean;
   podeExportar: boolean;
   podeSalvarBusca: boolean;
@@ -37,7 +39,9 @@ export function SearchBar({
   onPesquisar,
   onExportar,
   onSalvarBusca,
+  onCancelarBusca,
   loading,
+  cancelando,
   exportando,
   podeExportar,
   podeSalvarBusca,
@@ -81,6 +85,11 @@ export function SearchBar({
         <Button variant="ghost" onClick={onSalvarBusca} disabled={loading || !podeSalvarBusca}>
           Salvar busca
         </Button>
+        {loading && (
+          <Button variant="ghost" onClick={onCancelarBusca} disabled={cancelando}>
+            {cancelando ? "Cancelando..." : "Cancelar busca"}
+          </Button>
+        )}
         <Button variant="primary" onClick={onPesquisar} disabled={loading} aria-busy={loading}>
           {loading && (
             <span className="mr-1.5 inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent align-[-2px] motion-reduce:animate-none" />

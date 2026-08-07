@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { Browser, BrowserContext, Page, chromium } from 'playwright-core';
 import chromiumServerless from '@sparticuz/chromium';
 import { LeadsService } from '../leads/leads.service';
@@ -9,6 +10,29 @@ import { ScrapedLead } from './interfaces/scraped-lead.interface';
 interface CardResultado {
   nome: string | null;
   urlMaps: string | null;
+}
+
+// Estado de cancelamento de uma busca em andamento, mantido em memória e
+// indexado por searchId — nunca em banco (representa só a execução atual do
+// processo). Removido do Map assim que a busca termina (com ou sem
+// cancelamento), em start(), para não vazar memória.
+interface EstadoBuscaAtiva {
+  cancelado: boolean;
+  totalEncontrados: number;
+  totalProcessados: number;
+}
+
+export interface CancelarBuscaResultado {
+  success: boolean;
+  cancelado: boolean;
+  searchId?: string;
+  totalResultados?: number;
+  message?: string;
+}
+
+export interface BuscaAtualResultado {
+  emAndamento: boolean;
+  searchId: string | null;
 }
 
 // Ambientes onde não há um Chromium do Playwright instalado no sistema —
@@ -26,6 +50,19 @@ const PRECISA_CHROMIUM_EMPACOTADO = Boolean(
 // ("Timeout de 25s ao processar empresa") no Render, ambiente mais lento
 // que o local.
 const TIMEOUT_POR_EMPRESA_MS = 45000;
+
+// Timeout de cada tentativa de page.goto em navegarComRetry(). Antes eram
+// 30000ms, e o retry repetia mais 30000ms — juntas (30s + 30s = 60s) as
+// duas tentativas sozinhas já ultrapassavam o orçamento total de
+// TIMEOUT_POR_EMPRESA_MS (45s), que ainda precisa sobrar tempo para o
+// waitForSelector('h1') e a extração/persistência que rodam depois do
+// goto. Na prática isso fazia o retry quase nunca ter chance real de
+// concluir: quando a 1ª tentativa falhava por estourar seu próprio
+// timeout, o withTimeout externo já matava tudo antes da 2ª terminar.
+// Reduzido para 15000ms: mesmo no pior caso (as duas tentativas esgotando
+// o timeout) a navegação consome só 30s, deixando ~15s de folga real para
+// o restante do processamento dentro do limite de 45s.
+const GOTO_TIMEOUT_MS = 15000;
 
 // Processamento dos detalhes de cada empresa encontrada (start()): antes
 // sequencial (uma empresa por vez), o que multiplicava o tempo total pelo
@@ -151,6 +188,12 @@ export class ScraperService {
   // réplicas do processo).
   private scrapingEmAndamento = false;
 
+  // Estado de cancelamento por searchId — ver EstadoBuscaAtiva. Só existe uma
+  // entrada por vez na prática (scrapingEmAndamento impede buscas
+  // concorrentes), mas o índice por searchId já deixa o mecanismo seguro caso
+  // isso mude no futuro.
+  private readonly buscasAtivas = new Map<string, EstadoBuscaAtiva>();
+
   constructor(
     private readonly leadsService: LeadsService,
     private readonly searchHistoryService: SearchHistoryService,
@@ -171,6 +214,14 @@ export class ScraperService {
 
     this.scrapingEmAndamento = true;
     const inicioTotal = Date.now();
+
+    const searchId = randomUUID();
+    this.buscasAtivas.set(searchId, {
+      cancelado: false,
+      totalEncontrados: 0,
+      totalProcessados: 0,
+    });
+    console.log(`[scraper] busca iniciada: searchId=${searchId}`);
 
     try {
       const buscaComCidade = [dto.termoBusca, dto.bairro, dto.cidade]
@@ -214,8 +265,14 @@ export class ScraperService {
         const results = await this.buscarListaDeEmpresas(
           context,
           buscaComCidade,
+          searchId,
         );
         const tempoListaMs = Date.now() - inicioTotal;
+
+        const estadoAposLista = this.buscasAtivas.get(searchId);
+        if (estadoAposLista) {
+          estadoAposLista.totalEncontrados = results.length;
+        }
 
         const inicioDetalhes = Date.now();
 
@@ -231,6 +288,14 @@ export class ScraperService {
           results,
           CONCORRENCIA_MAXIMA_PROCESSAMENTO_EMPRESAS,
           async (result) => {
+            // Verificação de cancelamento (item 6): se a busca foi cancelada,
+            // nenhuma empresa nova é iniciada a partir daqui — empresas cujo
+            // processamento já começou em outro worker seguem até o fim
+            // naturalmente (ver comentário em extrairDetalheDeEmpresa/finally
+            // abaixo sobre não forçar interrupção).
+            const estadoBusca = this.buscasAtivas.get(searchId);
+            if (estadoBusca?.cancelado) return null;
+
             if (!result.urlMaps) return null;
 
             const nomeEmpresa = result.nome ?? result.urlMaps;
@@ -268,6 +333,8 @@ export class ScraperService {
               );
 
               return null;
+            } finally {
+              if (estadoBusca) estadoBusca.totalProcessados += 1;
             }
           },
         );
@@ -298,6 +365,12 @@ export class ScraperService {
 
         return empresas;
       } finally {
+        // Limpeza de recursos (item 7): fechamento de context/browser já
+        // existia e continua igual, cancelado ou não — só adiciona o log de
+        // acompanhamento quando a busca foi cancelada.
+        if (this.buscasAtivas.get(searchId)?.cancelado) {
+          console.log(`[scraper] encerrando busca cancelada: searchId=${searchId}`);
+        }
         try {
           await context.close();
         } catch (erroFechamentoContexto) {
@@ -313,8 +386,56 @@ export class ScraperService {
         }
       }
     } finally {
+      if (this.buscasAtivas.get(searchId)?.cancelado) {
+        console.log(`[scraper] busca cancelada: searchId=${searchId}`);
+      }
+      // Remove o estado de cancelamento em memória (item 4) para não vazar —
+      // ocorre tanto em conclusão normal quanto em cancelamento.
+      this.buscasAtivas.delete(searchId);
       this.scrapingEmAndamento = false;
     }
+  }
+
+  // Endpoint de cancelamento (item 5): marca a busca correspondente como
+  // cancelada, se ainda estiver em andamento. Idempotente — chamar de novo
+  // para um searchId já cancelado não lança exceção, apenas confirma de
+  // novo o cancelamento (item 6, teste de cancelamento duplicado).
+  cancelar(searchId: string): CancelarBuscaResultado {
+    const estado = this.buscasAtivas.get(searchId);
+
+    if (!estado) {
+      return {
+        success: false,
+        cancelado: false,
+        message: 'Busca não encontrada ou já finalizada.',
+      };
+    }
+
+    if (!estado.cancelado) {
+      estado.cancelado = true;
+      console.log(`[scraper] cancelamento solicitado: searchId=${searchId}`);
+    }
+
+    return {
+      success: true,
+      cancelado: true,
+      searchId,
+      totalResultados: estado.totalProcessados,
+    };
+  }
+
+  // Leitura pura do estado já mantido por buscasAtivas — não cria, altera
+  // nem remove nenhuma entrada. Só existe uma busca ativa por vez na prática
+  // (scrapingEmAndamento impede concorrência), então a primeira entrada do
+  // Map é a busca atual, se houver.
+  getBuscaAtual(): BuscaAtualResultado {
+    const [primeiraEntrada] = this.buscasAtivas.keys();
+
+    if (!primeiraEntrada) {
+      return { emAndamento: false, searchId: null };
+    }
+
+    return { emAndamento: true, searchId: primeiraEntrada };
   }
 
   // Processa uma única empresa com timeout (item 2) e retry de navegação
@@ -443,7 +564,7 @@ export class ScraperService {
     try {
       await page.goto(url, {
         waitUntil: 'domcontentloaded',
-        timeout: 30000,
+        timeout: GOTO_TIMEOUT_MS,
       });
     } catch (erroNavegacao) {
       console.warn(
@@ -452,7 +573,7 @@ export class ScraperService {
       );
       await page.goto(url, {
         waitUntil: 'domcontentloaded',
-        timeout: 30000,
+        timeout: GOTO_TIMEOUT_MS,
       });
     }
   }
@@ -696,6 +817,7 @@ export class ScraperService {
   private async buscarListaDeEmpresas(
     context: BrowserContext,
     termoBusca: string,
+    searchId: string,
   ): Promise<CardResultado[]> {
     const termoNormalizado = normalizarTermoBusca(termoBusca);
     console.log('[DIAG][normalizacao-termo] termo original:', termoBusca);
@@ -865,6 +987,15 @@ export class ScraperService {
           let motivoParada = 'loop encerrado sem condição de parada explícita';
 
           while (true) {
+            // Verificação de cancelamento (item 6): checada antes de cada
+            // nova rodada de scroll — se a busca foi cancelada, nenhuma nova
+            // rodada começa e a coleta de resultados para aqui.
+            if (this.buscasAtivas.get(searchId)?.cancelado) {
+              console.log(`[scraper] cancelamento detectado: searchId=${searchId}`);
+              motivoParada = 'busca cancelada pelo usuário';
+              break;
+            }
+
             rodada++;
             const resultadosAntes = empresasMap.size;
 

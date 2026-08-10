@@ -4,8 +4,10 @@ import { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode, useState } from 
 import { Lead } from "@/src/models/lead";
 import { CheckIcon, CopyIcon, ExternalLinkIcon, MapPinIcon } from "@/components/leads/icons";
 
+// Sem transition-colors: são até 3 desses por linha da tabela, e transicionar
+// cor em todos ao trocar de tema (não só no hover) some com a repintura.
 const actionButtonClassName =
-  "flex h-7 w-7 items-center justify-center rounded-[6px] border border-border text-muted transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40";
+  "flex h-7 w-7 items-center justify-center rounded-[6px] border border-border text-muted hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40";
 
 function normalizarUrl(url: string) {
   if (/^https?:\/\//i.test(url)) return url;

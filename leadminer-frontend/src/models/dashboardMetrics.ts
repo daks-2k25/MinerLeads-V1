@@ -15,12 +15,6 @@ export interface CategoriaMaisPesquisada {
   totalPesquisas: number;
 }
 
-export interface ApiCredit {
-  creditoInicial: number;
-  consumoEstimado: number;
-  saldoRestante: number;
-}
-
 export interface DashboardMetrics {
   totalLeads: number;
   totalPesquisas: number;
@@ -29,5 +23,4 @@ export interface DashboardMetrics {
   chamadasEvitadasCache: number;
   ultimasPesquisas: UltimaPesquisa[];
   categoriasMaisPesquisadas: CategoriaMaisPesquisada[];
-  apiCredit: ApiCredit;
 }

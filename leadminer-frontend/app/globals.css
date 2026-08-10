@@ -15,6 +15,15 @@
   --success-soft: #e4f5ea;
   --danger: #d93438;
   --danger-soft: #fbe7e7;
+  --warning: #b45309;
+  --warning-soft: #fdf0e0;
+  --elevation-color: 220 20% 40%;
+  --elevation-sm: 0 1px 2px hsl(var(--elevation-color) / 0.06), 0 1px 1px hsl(var(--elevation-color) / 0.04);
+  --elevation-md: 0 4px 12px hsl(var(--elevation-color) / 0.08), 0 2px 4px hsl(var(--elevation-color) / 0.05);
+  --elevation-lg: 0 12px 28px hsl(var(--elevation-color) / 0.12), 0 4px 10px hsl(var(--elevation-color) / 0.06);
+  --radius-token-sm: 5px;
+  --radius-token-md: 7px;
+  --radius-token-lg: 10px;
 }
 
 @theme inline {
@@ -32,6 +41,14 @@
   --color-success-soft: var(--success-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --shadow-sm: var(--elevation-sm);
+  --shadow-md: var(--elevation-md);
+  --shadow-lg: var(--elevation-lg);
+  --radius-sm: var(--radius-token-sm);
+  --radius-md: var(--radius-token-md);
+  --radius-lg: var(--radius-token-lg);
   --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 }
@@ -51,6 +68,9 @@
   --success-soft: #10231a;
   --danger: #e5595c;
   --danger-soft: #2a1616;
+  --warning: #e0a341;
+  --warning-soft: #2a2013;
+  --elevation-color: 220 40% 2%;
 }
 
 body {
@@ -61,4 +81,83 @@ body {
 
 :root[data-theme="dark"] body {
   background: var(--subtle);
+}
+
+@keyframes fade-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-slide-up {
+  animation: fade-slide-up 0.45s ease-out both;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes radar-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-radar-sweep {
+  animation: radar-sweep 2.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-slide-up,
+  .animate-pulse-ring,
+  .animate-radar-sweep {
+    animation: none;
+  }
+}
+
+/* Scrollbar fina e discreta, nas cores do tema — usada no container de
+   scroll da tabela de leads em vez da barra padrão do navegador. Não
+   esconde o scroll (permanece sempre visível e utilizável), só reduz a
+   espessura e assume os tokens de cor. */
+.scroll-elegante {
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted-2) transparent;
+}
+
+.scroll-elegante::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scroll-elegante::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-elegante::-webkit-scrollbar-thumb {
+  background-color: var(--muted-2);
+  border-radius: 999px;
+}
+
+.scroll-elegante::-webkit-scrollbar-thumb:hover {
+  background-color: var(--muted);
+}
+
+.scroll-elegante::-webkit-scrollbar-corner {
+  background: transparent;
 }

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { MetricsGrid } from "@/components/dashboard/MetricsGrid";
-import { ApiCreditCard } from "@/components/dashboard/ApiCreditCard";
+import { LatestSearchCard } from "@/components/dashboard/LatestSearchCard";
 import { RecentSearchesList } from "@/components/dashboard/RecentSearchesList";
 import { TopCategoriesList } from "@/components/dashboard/TopCategoriesList";
 import { Panel } from "@/components/ui/Panel";
@@ -41,6 +41,8 @@ export default function DashboardPage() {
 
       {metrics && (
         <>
+          <LatestSearchCard pesquisa={metrics.ultimasPesquisas[0]} />
+
           <MetricsGrid
             totalLeads={metrics.totalLeads}
             totalPesquisas={metrics.totalPesquisas}
@@ -48,8 +50,6 @@ export default function DashboardPage() {
             totalLeadsCache={metrics.totalLeadsCache}
             chamadasEvitadasCache={metrics.chamadasEvitadasCache}
           />
-
-          <ApiCreditCard apiCredit={metrics.apiCredit} />
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <RecentSearchesList pesquisas={metrics.ultimasPesquisas} />

@@ -98,7 +98,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen flex-col md:h-screen md:flex-row md:overflow-hidden">
       <Sidebar
         buscasSalvas={buscasSalvas}
         buscasSalvasLoading={buscasSalvasLoading}
@@ -114,41 +114,52 @@ export default function Home() {
         exportandoHistoricoId={exportandoHistoricoId}
         erroExportacaoHistorico={erroExportacaoHistorico}
       />
-      <main className="flex flex-1 flex-col gap-4 p-5 md:p-6">
-        <SearchBar
-          termoBusca={termoBusca}
-          cidade={cidade}
-          bairro={bairro}
-          categoria={categoria}
-          onTermoBuscaChange={setTermoBusca}
-          onCidadeChange={setCidade}
-          onBairroChange={setBairro}
-          onCategoriaChange={setCategoria}
-          onPesquisar={handlePesquisarComHistorico}
-          onExportar={handleExportar}
-          onSalvarBusca={() => setModalSalvarAberto(true)}
-          onCancelarBusca={handleCancelarBusca}
-          loading={loading}
-          cancelando={cancelando}
-          exportando={exportando}
-          podeExportar={leads.length > 0}
-          podeSalvarBusca={termoBusca.trim().length > 0}
-        />
+      <main className="flex min-w-0 flex-1 flex-col md:min-h-0 md:overflow-hidden">
+        <div className="flex shrink-0 flex-col gap-4 p-5 pb-4 md:p-6 md:pb-4">
+          <div className="flex flex-col gap-0.5">
+            <h1 className="text-[19px] font-bold tracking-tight text-foreground">Leads</h1>
+            <p className="text-[12.5px] text-muted">
+              Descubra e organize oportunidades comerciais capturadas do Google Maps.
+            </p>
+          </div>
 
-        <StatusBanner status={status} />
-        <StatusBanner
-          status={erroExportacao ? { message: erroExportacao, tone: "error" } : null}
-        />
+          <SearchBar
+            termoBusca={termoBusca}
+            cidade={cidade}
+            bairro={bairro}
+            categoria={categoria}
+            onTermoBuscaChange={setTermoBusca}
+            onCidadeChange={setCidade}
+            onBairroChange={setBairro}
+            onCategoriaChange={setCategoria}
+            onPesquisar={handlePesquisarComHistorico}
+            onExportar={handleExportar}
+            onSalvarBusca={() => setModalSalvarAberto(true)}
+            onCancelarBusca={handleCancelarBusca}
+            loading={loading}
+            cancelando={cancelando}
+            exportando={exportando}
+            podeExportar={leads.length > 0}
+            podeSalvarBusca={termoBusca.trim().length > 0}
+          />
 
-        <StatsStrip stats={stats} />
+          <StatusBanner status={status} />
+          <StatusBanner
+            status={erroExportacao ? { message: erroExportacao, tone: "error" } : null}
+          />
 
-        {loading ? (
-          <LoadingState progresso={progresso} />
-        ) : leads.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <LeadsTable leads={leads} onSelectLead={setLeadSelecionado} />
-        )}
+          <StatsStrip stats={stats} />
+        </div>
+
+        <div className="min-h-0 flex-1 px-5 pb-5 md:px-6 md:pb-6">
+          {loading ? (
+            <LoadingState progresso={progresso} cancelando={cancelando} />
+          ) : leads.length === 0 ? (
+            <EmptyState jaTentouBuscar={status !== null} />
+          ) : (
+            <LeadsTable leads={leads} onSelectLead={setLeadSelecionado} className="h-full" />
+          )}
+        </div>
       </main>
 
       <LeadDetailsPanel lead={leadSelecionado} onClose={() => setLeadSelecionado(null)} />
